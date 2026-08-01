@@ -3,8 +3,17 @@
   "minVersion": "0.8",
   "package": "com.ghostipedia.nebulaeae2.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
-  "client": [],
+  "mixins": [
+    "ae2.compute.TickManagerServiceWorkGateMixin",
+    "ae2.crafting.CraftingCpuLogicComputeMixin",
+    "ae2.energy.AEBasePoweredBlockEntityExternalPowerMixin",
+    "ae2.energy.EnergyAcceptorPartExternalPowerMixin",
+    "ae2.menu.networktool.NetworkStatusMixin"
+  ],
+  "client": [
+    "ae2.client.gui.InitScreensMixin",
+    "ae2.client.gui.networktool.NetworkStatusScreenMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

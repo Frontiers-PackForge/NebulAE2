@@ -19,6 +19,7 @@ dependencies {
 
     implementation(forge.jade)
 
+    compileOnly(forge.sodium)
     runtimeOnly(forge.sodium)
     runtimeOnly(forge.iris)
 }

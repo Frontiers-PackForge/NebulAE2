@@ -30,14 +30,14 @@ config = "${mod_id}.mixins.json"
 [[dependencies.${mod_id}]]
     modId = "ae2"
     type = "required"
-    versionRange = "[${ae2_version},)"
+    versionRange = "[${ae2_version}]"
     ordering = "AFTER"
     side = "BOTH"
 
 [[dependencies.${mod_id}]]
     modId = "gtceu"
     type = "required"
-    versionRange = "[${gtceu_version},)"
+    versionRange = "[${gtceu_version}]"
     ordering = "AFTER"
     side = "BOTH"
 

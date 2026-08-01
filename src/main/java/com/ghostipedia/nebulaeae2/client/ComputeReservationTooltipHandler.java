@@ -6,6 +6,8 @@ import com.ghostipedia.nebulaeae2.compute.ComputeTuning;
 import appeng.api.implementations.parts.ICablePart;
 import appeng.api.parts.IPartItem;
 import appeng.api.storage.IStorageProvider;
+import appeng.parts.automation.AnnihilationPlanePart;
+import appeng.parts.automation.IOBusPart;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -44,6 +46,10 @@ public final class ComputeReservationTooltipHandler {
             id("ae2", "me_chest"),
             id("extendedae", "ex_drive"),
             id("megacells", "cell_dock"));
+    private static final Set<ResourceLocation> SCHEDULED_WORK_BLOCKS = Set.of(
+            id("ae2", "io_port"),
+            id("extendedae", "ex_io_port"),
+            id("extendedae", "active_formation_plane"));
     private static final Set<ResourceLocation> CHANNEL_ONLY_DEVICES = Set.of(
             id("ae2", "import_bus"),
             id("ae2", "export_bus"),
@@ -96,20 +102,28 @@ public final class ComputeReservationTooltipHandler {
                     "tooltip.nebulaeae2.compute.passive",
                     fixedReservation).withStyle(ChatFormatting.AQUA));
         }
+        if (requiresScheduledWork(stack, itemId, interfaceDevice)) {
+            event.getToolTip().add(Component.translatable(
+                    "tooltip.nebulaeae2.compute.active_work",
+                    ComputeTuning.SCHEDULED_WORK_CWU).withStyle(ChatFormatting.GRAY));
+        }
         if (interfaceDevice) {
             event.getToolTip().add(Component.translatable(
                     "tooltip.nebulaeae2.compute.interface_stocking",
-                    ComputeTuning.INTERFACE_STOCKING_SLOTS_PER_CWU).withStyle(ChatFormatting.GRAY));
+                    ComputeTuning.INTERFACE_STOCKING_GROUP_RESERVATION,
+                    ComputeTuning.INTERFACE_STOCKING_SLOTS_PER_GROUP).withStyle(ChatFormatting.GRAY));
         }
         if (storageProvider) {
             event.getToolTip().add(Component.translatable(
                     "tooltip.nebulaeae2.compute.storage_index",
-                    ComputeTuning.INDEX_KEYS_PER_CWU).withStyle(ChatFormatting.GRAY));
+                    ComputeTuning.INDEX_KEY_GROUP_RESERVATION,
+                    ComputeTuning.INDEX_KEYS_PER_GROUP).withStyle(ChatFormatting.GRAY));
         }
         if (isCable(stack)) {
             event.getToolTip().add(Component.translatable(
                     "tooltip.nebulaeae2.compute.physical_links",
-                    ComputeTuning.PHYSICAL_LINKS_PER_CWU).withStyle(ChatFormatting.GRAY));
+                    ComputeTuning.PHYSICAL_LINK_GROUP_RESERVATION,
+                    ComputeTuning.PHYSICAL_LINKS_PER_GROUP).withStyle(ChatFormatting.GRAY));
         }
     }
 
@@ -140,6 +154,18 @@ public final class ComputeReservationTooltipHandler {
     private static boolean isCable(ItemStack stack) {
         return stack.getItem() instanceof IPartItem<?> partItem
                 && ICablePart.class.isAssignableFrom(partItem.getPartClass());
+    }
+
+    private static boolean requiresScheduledWork(ItemStack stack, ResourceLocation itemId, boolean interfaceDevice) {
+        if (interfaceDevice || SCHEDULED_WORK_BLOCKS.contains(itemId)) {
+            return true;
+        }
+        if (!(stack.getItem() instanceof IPartItem<?> partItem)) {
+            return false;
+        }
+        var partClass = partItem.getPartClass();
+        return IOBusPart.class.isAssignableFrom(partClass)
+                || AnnihilationPlanePart.class.isAssignableFrom(partClass);
     }
 
     private static boolean matchesAnyTag(ItemStack stack, List<TagKey<Item>> tags) {

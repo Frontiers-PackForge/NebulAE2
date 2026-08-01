@@ -5,6 +5,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.me.service.TickManagerService;
 import appeng.me.service.helpers.TickTracker;
+import com.ghostipedia.nebulaeae2.compute.ComputeTuning;
 import com.ghostipedia.nebulaeae2.compute.NodeWorkloadClassifier;
 import com.ghostipedia.nebulaeae2.compute.api.IComputeService;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,7 +31,7 @@ public abstract class TickManagerServiceWorkGateMixin {
             callback.setReturnValue(TickRateModulation.SLOWER);
             return;
         }
-        if (!grid.getService(IComputeService.class).tryAcquire(node, 1L)) {
+        if (!grid.getService(IComputeService.class).tryAcquire(node, ComputeTuning.SCHEDULED_WORK_CWU)) {
             callback.setReturnValue(TickRateModulation.SLOWER);
         }
     }

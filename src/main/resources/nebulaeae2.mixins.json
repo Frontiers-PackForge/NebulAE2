@@ -5,12 +5,19 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ae2.compute.TickManagerServiceWorkGateMixin",
-    "ae2.crafting.CraftingCpuLogicComputeMixin",
     "ae2.energy.AEBasePoweredBlockEntityExternalPowerMixin",
     "ae2.energy.EnergyAcceptorPartExternalPowerMixin",
-    "ae2.menu.networktool.NetworkStatusMixin"
+    "ae2.menu.networktool.NetworkStatusMixin",
+    "ae2.parts.networking.CablePartVisualChannelsMixin",
+    "ae2.pathing.GridNodeSoftChannelMixin",
+    "ae2.pathing.PathingCalculationSoftChannelMixin",
+    "ae2.pathing.PathingServiceSoftChannelMixin"
   ],
   "client": [
+    "gtceu.client.bloom.BloomShaderManagerAlphaCutoutMixin",
+    "gtceu.client.bloom.GTSodiumCompatAlphaCutoutMixin",
+    "ae2.client.render.cablebus.CableBusBakedModelStraightChannelsMixin",
+    "ae2.client.render.cablebus.CableBuilderOverloadColorMixin",
     "ae2.client.gui.InitScreensMixin",
     "ae2.client.gui.networktool.NetworkStatusScreenMixin"
   ],

@@ -80,18 +80,19 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
         nebulae$drawMetric(graphics, "capacity",
                 nebulae$ratePair(snapshot.reservedCwut(), snapshot.capacityCwut()), 24,
                 nebulae$loadColor(snapshot.reservedCwut(), snapshot.capacityCwut()));
-        nebulae$drawMetric(graphics, "work",
-                nebulae$ratePair(snapshot.workUsedCwut(), snapshot.workBudgetCwut()), 37,
-                nebulae$loadColor(snapshot.workUsedCwut(), snapshot.workBudgetCwut()));
-        nebulae$drawMetric(graphics, "available", nebulae$rate(snapshot.availableCwut()), 50, textColor);
+        nebulae$drawMetric(graphics, "work_capacity", nebulae$rate(snapshot.workCeilingCwut()), 37, textColor);
+        nebulae$drawMetric(graphics, "recent_work",
+                nebulae$recentWork(snapshot.recentWorkAverageCwut(), snapshot.recentWorkPeakCwut()), 50,
+                nebulae$loadColor(snapshot.recentWorkAverageCwut(), snapshot.workCeilingCwut()));
         nebulae$drawMetric(graphics, "debt", nebulae$work(snapshot.debtCwu()), 63,
                 snapshot.debtCwu() > 0 ? WARNING_COLOR : textColor);
         nebulae$drawMetric(graphics, "sources", nebulae$count(snapshot.sourceCount()), 76, textColor);
         nebulae$drawMetric(graphics, "nodes", nebulae$count(snapshot.trackedNodeCount()), 89, textColor);
-        nebulae$drawMetric(graphics, "throttled", nebulae$count(snapshot.throttledOperations()), 102,
-                snapshot.throttledOperations() > 0 ? WARNING_COLOR : textColor);
-        nebulae$drawMetric(graphics, "channels", nebulae$count(status.getChannelsUsed()), 126, textColor);
-        nebulae$drawMetric(graphics, "power_usage", nebulae$powerRate(status.getAveragePowerUsage()), 139,
+        nebulae$drawMetric(graphics, "throttled", nebulae$count(snapshot.recentThrottledOperations()), 102,
+                snapshot.recentThrottledOperations() > 0 ? WARNING_COLOR : textColor);
+        nebulae$drawMetric(graphics, "channel_overhead", nebulae$rate(snapshot.channelOverloadCwut()), 115, textColor);
+        nebulae$drawMetric(graphics, "channels", nebulae$count(status.getChannelsUsed()), 139, textColor);
+        nebulae$drawMetric(graphics, "power_usage", nebulae$powerRate(status.getAveragePowerUsage()), 152,
                 textColor);
         callback.cancel();
     }
@@ -128,6 +129,14 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
     }
 
     @Unique
+    private static Component nebulae$recentWork(double average, long peak) {
+        return Component.translatable(
+                "gui.nebulaeae2.controller_compute.value.recent_work",
+                nebulae$compact(average),
+                nebulae$compact(peak));
+    }
+
+    @Unique
     private static Component nebulae$powerRate(double aePerTick) {
         double fePerTick = PowerUnit.AE.convertTo(PowerUnit.FE, aePerTick);
         double euPerTick = Math.max(0, fePerTick / FeCompat.ratio(false));
@@ -146,6 +155,17 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
             return style.getColor(PaletteColor.ERROR).toARGB();
         }
         if (capacity > 0 && (double) used / capacity >= 0.9) {
+            return WARNING_COLOR;
+        }
+        return style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
+    }
+
+    @Unique
+    private int nebulae$loadColor(double used, long capacity) {
+        if (used > capacity) {
+            return style.getColor(PaletteColor.ERROR).toARGB();
+        }
+        if (capacity > 0 && used / capacity >= 0.9) {
             return WARNING_COLOR;
         }
         return style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();

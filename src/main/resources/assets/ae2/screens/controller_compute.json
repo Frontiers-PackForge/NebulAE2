@@ -3,7 +3,7 @@
   "includes": ["common/common.json"],
   "background": {
     "texture": "nebulaeae2:textures/guis/controller_compute.png",
-    "srcRect": [0, 0, 195, 157]
+    "srcRect": [0, 0, 195, 170]
   },
   "text": {
     "dialog_title": {

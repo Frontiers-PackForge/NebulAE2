@@ -1,0 +1,24 @@
+dependencies {
+    compileOnly(libs.jetbrains.annotations)
+
+    implementation(files("libs/gtceu-1.21.1-8.0.0.jar"))
+    compileOnly(forge.mui)
+    compileOnly(forge.registrate)
+    compileOnly(forge.configuration)
+    compileOnly(forge.ldlib)
+    runtimeOnly(files("libs/ldlib-neoforge-1.21.1-1.0.35.a-ccpatch.jar"))
+
+    implementation(forge.ae2)
+    implementation(forge.guideme)
+    implementation(forge.ae2wtlib)
+    implementation(forge.clothconfig)
+
+    implementation(forge.emi)
+    runtimeOnly(forge.tmrv)
+    compileOnly(forge.bundles.jei)
+
+    implementation(forge.jade)
+
+    runtimeOnly(forge.sodium)
+    runtimeOnly(forge.iris)
+}

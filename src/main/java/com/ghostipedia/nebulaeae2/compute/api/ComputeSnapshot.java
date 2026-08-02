@@ -1,5 +1,7 @@
 package com.ghostipedia.nebulaeae2.compute.api;
 
+import com.ghostipedia.nebulaeae2.compute.ComputeTuning;
+
 public record ComputeSnapshot(
         long capacityCwut,
         long fundedCwut,
@@ -15,10 +17,15 @@ public record ComputeSnapshot(
         long debtCwu,
         int sourceCount,
         int trackedNodeCount,
+        long channelDeviceCount,
         long recentThrottledOperations,
         long recentRecoveryOperations) {
 
-    public long workCeilingCwut() {
-        return Math.max(0, capacityCwut - reservedCwut);
+    public long channelDeviceReservationCwut() {
+        return ComputeTuning.channelDeviceReservation(channelDeviceCount);
+    }
+
+    public long deviceScaleCwut() {
+        return ComputeTuning.channelDeviceScaleReservation(channelDeviceCount);
     }
 }

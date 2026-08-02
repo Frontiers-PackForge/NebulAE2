@@ -13,6 +13,7 @@ import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.storage.IStorageProvider;
+import appeng.blockentity.networking.WirelessAccessPointBlockEntity;
 import appeng.helpers.InterfaceLogicHost;
 import appeng.me.service.EnergyService;
 import org.jetbrains.annotations.Nullable;
@@ -49,8 +50,10 @@ public final class GridComputeService implements IComputeService, IGridServicePr
     private long capacityCwut;
     private long fundedCwut;
     private long localInfrastructureReservedCwut;
+    private long localChannelDeviceCount;
     private long localChannelOverloadCwut;
     private long infrastructureReservedCwut;
+    private long channelDeviceCount;
     private long reservedCwut;
     private long passiveShortfallCwut;
     private long powerFundingShortfallCwut;
@@ -221,6 +224,7 @@ public final class GridComputeService implements IComputeService, IGridServicePr
                 debtCwu,
                 sourceCount,
                 trackedNodeCount(),
+                channelDeviceCount,
                 recentThrottledOperations,
                 recentRecoveryOperations);
     }
@@ -276,15 +280,21 @@ public final class GridComputeService implements IComputeService, IGridServicePr
             ticksUntilReservationRefresh--;
             return;
         }
-        localInfrastructureReservedCwut = calculateReservations();
+        LocalReservation reservation = calculateReservations();
+        localInfrastructureReservedCwut = reservation.infrastructureCwut();
+        localChannelDeviceCount = reservation.channelDeviceCount();
         reservationsDirty = false;
         ticksUntilReservationRefresh = ComputeTuning.RESERVATION_REFRESH_INTERVAL - 1;
     }
 
-    private long calculateReservations() {
+    private LocalReservation calculateReservations() {
         long reservation = 0;
+        long countedChannelDevices = 0;
         long physicalConnectionSides = 0;
         for (IGridNode node : nodes) {
+            if (node.getService(IComputeSource.class) == null && node.hasFlag(GridFlags.REQUIRE_CHANNEL)) {
+                countedChannelDevices = saturatingAdd(countedChannelDevices, 1);
+            }
             reservation = saturatingAdd(reservation, calculateNodeReservation(node));
             physicalConnectionSides = saturatingAdd(physicalConnectionSides, node.getInWorldConnections().size());
         }
@@ -294,15 +304,16 @@ public final class GridComputeService implements IComputeService, IGridServicePr
                 saturatingMultiply(
                         ceilDivide(physicalConnections, ComputeTuning.PHYSICAL_LINKS_PER_GROUP),
                         ComputeTuning.PHYSICAL_LINK_GROUP_RESERVATION));
-        return saturatingAdd(reservation, calculateIndexReservation());
+        return new LocalReservation(
+                saturatingAdd(reservation, calculateIndexReservation()),
+                countedChannelDevices);
     }
 
     private long calculateNodeReservation(IGridNode node) {
         if (node.getService(IComputeSource.class) != null) {
             return 0;
         }
-        long reservation = node.hasFlag(GridFlags.REQUIRE_CHANNEL) ?
-                ComputeTuning.CHANNEL_DEVICE_RESERVATION : 0;
+        long reservation = 0;
         if (node.getService(IStorageProvider.class) != null) {
             reservation = saturatingAdd(reservation, ComputeTuning.STORAGE_PROVIDER_RESERVATION);
         }
@@ -322,6 +333,12 @@ public final class GridComputeService implements IComputeService, IGridServicePr
                     saturatingMultiply(
                             ceilDivide(configuredSlots, ComputeTuning.INTERFACE_STOCKING_SLOTS_PER_GROUP),
                             ComputeTuning.INTERFACE_STOCKING_GROUP_RESERVATION));
+        }
+        if (node.getOwner() instanceof WirelessAccessPointBlockEntity wirelessAccessPoint) {
+            int boosters = wirelessAccessPoint.getInternalInventory().getStackInSlot(0).getCount();
+            reservation = saturatingAdd(
+                    reservation,
+                    saturatingMultiply(boosters, ComputeTuning.WIRELESS_BOOSTER_RESERVATION));
         }
         return reservation;
     }
@@ -549,13 +566,18 @@ public final class GridComputeService implements IComputeService, IGridServicePr
 
     private void updateTotalReservation() {
         infrastructureReservedCwut = 0;
+        channelDeviceCount = 0;
         channelOverloadCwut = 0;
         for (GridComputeService member : overlayMembers()) {
             infrastructureReservedCwut = saturatingAdd(
                     infrastructureReservedCwut,
                     member.localInfrastructureReservedCwut);
+            channelDeviceCount = saturatingAdd(channelDeviceCount, member.localChannelDeviceCount);
             channelOverloadCwut = saturatingAdd(channelOverloadCwut, member.localChannelOverloadCwut);
         }
+        infrastructureReservedCwut = saturatingAdd(
+                infrastructureReservedCwut,
+                ComputeTuning.channelDeviceReservation(channelDeviceCount));
         reservedCwut = saturatingAdd(infrastructureReservedCwut, channelOverloadCwut);
         updateFundingShortfalls();
     }
@@ -675,6 +697,7 @@ public final class GridComputeService implements IComputeService, IGridServicePr
         capacityCwut = 0;
         fundedCwut = 0;
         infrastructureReservedCwut = 0;
+        channelDeviceCount = 0;
         reservedCwut = 0;
         passiveShortfallCwut = 0;
         powerFundingShortfallCwut = 0;
@@ -733,6 +756,8 @@ public final class GridComputeService implements IComputeService, IGridServicePr
     private static long ceilDivide(long value, long divisor) {
         return value / divisor + (value % divisor == 0 ? 0 : 1);
     }
+
+    private record LocalReservation(long infrastructureCwut, long channelDeviceCount) {}
 
     private static final class ComputeSourceAllocation {
 

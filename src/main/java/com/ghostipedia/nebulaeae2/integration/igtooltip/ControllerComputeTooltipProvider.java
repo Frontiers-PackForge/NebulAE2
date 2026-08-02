@@ -1,6 +1,7 @@
 package com.ghostipedia.nebulaeae2.integration.igtooltip;
 
-import java.util.Locale;
+import static com.ghostipedia.nebulaeae2.integration.igtooltip.ComputeTooltipFormatting.loadColor;
+import static com.ghostipedia.nebulaeae2.integration.igtooltip.ComputeTooltipFormatting.value;
 
 import com.ghostipedia.nebulaeae2.NebulaeAE2;
 import com.ghostipedia.nebulaeae2.compute.api.ComputeSnapshot;
@@ -35,13 +36,15 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
     private static final String CAPACITY_CWUT = "CapacityCwut";
     private static final String RESERVED_CWUT = "ReservedCwut";
     private static final String PASSIVE_SHORTFALL_CWUT = "PassiveShortfallCwut";
-    private static final String WORK_CEILING_CWUT = "WorkCeilingCwut";
+    private static final String WORK_BUDGET_CWUT = "WorkBudgetCwut";
     private static final String RECENT_WORK_AVERAGE_CWUT = "RecentWorkAverageCwut";
     private static final String RECENT_WORK_PEAK_CWUT = "RecentWorkPeakCwut";
     private static final String CHANNEL_OVERLOAD_CWUT = "ChannelOverloadCwut";
     private static final String DEBT_CWU = "DebtCwu";
     private static final String SOURCE_COUNT = "SourceCount";
     private static final String TRACKED_NODE_COUNT = "TrackedNodeCount";
+    private static final String CHANNEL_DEVICE_COUNT = "ChannelDeviceCount";
+    private static final String DEVICE_SCALE_CWUT = "DeviceScaleCwut";
     private static final String THROTTLED_OPERATIONS = "ThrottledOperations";
     private static final String RECOVERY_OPERATIONS = "RecoveryOperations";
     private static final String USED_CHANNELS = "UsedChannels";
@@ -49,11 +52,13 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
 
     @Override
     public void registerCommon(CommonRegistration registration) {
+        CableComputeTooltipProvider.registerCommon();
         registration.addBlockEntityData(ID, ControllerBlockEntity.class, this);
     }
 
     @Override
     public void registerClient(ClientRegistration registration) {
+        CableComputeTooltipProvider.registerClient();
         registration.addBlockEntityBody(
                 ControllerBlockEntity.class,
                 ControllerBlock.class,
@@ -73,13 +78,15 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
         telemetry.putLong(CAPACITY_CWUT, snapshot.capacityCwut());
         telemetry.putLong(RESERVED_CWUT, snapshot.reservedCwut());
         telemetry.putLong(PASSIVE_SHORTFALL_CWUT, snapshot.passiveShortfallCwut());
-        telemetry.putLong(WORK_CEILING_CWUT, snapshot.workCeilingCwut());
+        telemetry.putLong(WORK_BUDGET_CWUT, snapshot.workBudgetCwut());
         telemetry.putDouble(RECENT_WORK_AVERAGE_CWUT, snapshot.recentWorkAverageCwut());
         telemetry.putLong(RECENT_WORK_PEAK_CWUT, snapshot.recentWorkPeakCwut());
         telemetry.putLong(CHANNEL_OVERLOAD_CWUT, snapshot.channelOverloadCwut());
         telemetry.putLong(DEBT_CWU, snapshot.debtCwu());
         telemetry.putInt(SOURCE_COUNT, snapshot.sourceCount());
         telemetry.putInt(TRACKED_NODE_COUNT, snapshot.trackedNodeCount());
+        telemetry.putLong(CHANNEL_DEVICE_COUNT, snapshot.channelDeviceCount());
+        telemetry.putLong(DEVICE_SCALE_CWUT, snapshot.deviceScaleCwut());
         telemetry.putLong(THROTTLED_OPERATIONS, snapshot.recentThrottledOperations());
         telemetry.putLong(RECOVERY_OPERATIONS, snapshot.recentRecoveryOperations());
         telemetry.putInt(USED_CHANNELS, grid.getPathingService().getUsedChannels());
@@ -98,7 +105,7 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
         long capacityCwut = telemetry.getLong(CAPACITY_CWUT);
         long reservedCwut = telemetry.getLong(RESERVED_CWUT);
         long passiveShortfallCwut = telemetry.getLong(PASSIVE_SHORTFALL_CWUT);
-        long workCeilingCwut = telemetry.getLong(WORK_CEILING_CWUT);
+        long workBudgetCwut = telemetry.getLong(WORK_BUDGET_CWUT);
         double recentWorkAverageCwut = telemetry.getDouble(RECENT_WORK_AVERAGE_CWUT);
         long recentWorkPeakCwut = telemetry.getLong(RECENT_WORK_PEAK_CWUT);
         long channelOverloadCwut = telemetry.getLong(CHANNEL_OVERLOAD_CWUT);
@@ -116,16 +123,25 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
                     value(passiveShortfallCwut, ChatFormatting.RED)));
         }
         tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.work_ceiling",
-                value(workCeilingCwut, ChatFormatting.AQUA)));
+                "tooltip.nebulaeae2.controller.work_capacity",
+                value(workBudgetCwut, ChatFormatting.AQUA)));
         tooltip.addLine(Component.translatable(
                 "tooltip.nebulaeae2.controller.recent_work",
-                value(recentWorkAverageCwut, loadColor(recentWorkAverageCwut, workCeilingCwut)),
+                value(recentWorkAverageCwut, loadColor(recentWorkAverageCwut, workBudgetCwut)),
                 value(recentWorkPeakCwut, ChatFormatting.AQUA)));
         if (channelOverloadCwut > 0) {
             tooltip.addLine(Component.translatable(
                     "tooltip.nebulaeae2.controller.channel_overhead",
-                    value(channelOverloadCwut, ChatFormatting.GOLD)));
+                    value(channelOverloadCwut, ChatFormatting.AQUA)));
+        }
+        tooltip.addLine(Component.translatable(
+                "tooltip.nebulaeae2.controller.channel_devices",
+                value(telemetry.getLong(CHANNEL_DEVICE_COUNT), ChatFormatting.AQUA)));
+        long deviceScaleCwut = telemetry.getLong(DEVICE_SCALE_CWUT);
+        if (deviceScaleCwut > 0) {
+            tooltip.addLine(Component.translatable(
+                    "tooltip.nebulaeae2.controller.device_scale",
+                    value(deviceScaleCwut, ChatFormatting.AQUA)));
         }
         if (debtCwu > 0) {
             tooltip.addLine(Component.translatable(
@@ -162,46 +178,4 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
         return Math.max(0, fe / FeCompat.ratio(false));
     }
 
-    private static ChatFormatting loadColor(long used, long capacity) {
-        if (used > capacity) {
-            return ChatFormatting.RED;
-        }
-        if (capacity > 0 && (double) used / capacity >= 0.9) {
-            return ChatFormatting.GOLD;
-        }
-        return ChatFormatting.AQUA;
-    }
-
-    private static ChatFormatting loadColor(double used, long capacity) {
-        if (used > capacity) {
-            return ChatFormatting.RED;
-        }
-        if (capacity > 0 && used / capacity >= 0.9) {
-            return ChatFormatting.GOLD;
-        }
-        return ChatFormatting.AQUA;
-    }
-
-    private static Component value(long value, ChatFormatting color) {
-        return Component.literal(Long.toString(value)).withStyle(color);
-    }
-
-    private static Component value(double value, ChatFormatting color) {
-        return Component.literal(formatDecimal(value)).withStyle(color);
-    }
-
-    private static String formatDecimal(double value) {
-        if (!Double.isFinite(value)) {
-            return "0";
-        }
-        String formatted = String.format(Locale.ROOT, "%.2f", value);
-        int end = formatted.length();
-        while (end > 0 && formatted.charAt(end - 1) == '0') {
-            end--;
-        }
-        if (end > 0 && formatted.charAt(end - 1) == '.') {
-            end--;
-        }
-        return formatted.substring(0, end);
-    }
 }

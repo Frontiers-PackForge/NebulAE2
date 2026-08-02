@@ -48,6 +48,7 @@ public abstract class NetworkStatusMixin implements NetworkStatusComputeExtensio
                 data.readVarInt(),
                 data.readVarInt(),
                 data.readLong(),
+                data.readLong(),
                 data.readLong());
         var extension = (NetworkStatusComputeExtension) (Object) callback.getReturnValue();
         extension.nebulae$setComputeSnapshot(snapshot);
@@ -69,6 +70,7 @@ public abstract class NetworkStatusMixin implements NetworkStatusComputeExtensio
         data.writeLong(nebulae$computeSnapshot.debtCwu());
         data.writeVarInt(nebulae$computeSnapshot.sourceCount());
         data.writeVarInt(nebulae$computeSnapshot.trackedNodeCount());
+        data.writeLong(nebulae$computeSnapshot.channelDeviceCount());
         data.writeLong(nebulae$computeSnapshot.recentThrottledOperations());
         data.writeLong(nebulae$computeSnapshot.recentRecoveryOperations());
     }

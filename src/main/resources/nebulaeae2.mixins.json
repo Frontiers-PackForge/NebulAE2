@@ -4,15 +4,20 @@
   "package": "com.ghostipedia.nebulaeae2.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ae2.blockentity.networking.ControllerBlockEntityVisualStateMixin",
+    "ae2.config.AEConfigChannelCommentMixin",
+    "ae2.config.AEConfigChannelModeMixin",
     "ae2.compute.EnergyServiceAccessor",
     "ae2.compute.TickManagerServiceWorkGateMixin",
     "ae2.energy.AEBasePoweredBlockEntityExternalPowerMixin",
     "ae2.energy.EnergyAcceptorPartExternalPowerMixin",
+    "ae2.integration.igtooltip.PowerStorageDataProviderControllerMixin",
     "ae2.menu.networktool.NetworkStatusMixin",
     "ae2.parts.networking.CablePartVisualChannelsMixin",
     "ae2.pathing.GridNodeSoftChannelMixin",
     "ae2.pathing.PathingCalculationSoftChannelMixin",
-    "ae2.pathing.PathingServiceSoftChannelMixin"
+    "ae2.pathing.PathingServiceSoftChannelMixin",
+    "ae2.qnb.QuantumBridgeFrequencyMixin"
   ],
   "client": [
     "gtceu.client.bloom.BloomShaderManagerAlphaCutoutMixin",

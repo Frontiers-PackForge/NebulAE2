@@ -27,8 +27,12 @@ public final class ChannelOverloadPolicy {
             return 0;
         }
         long overloadIndex = (long) allocatedChannels - rating - 1;
-        long costMultiplier = 1 + overloadIndex / rating;
+        long costMultiplier = 1 + overloadIndex / overloadStep(rating);
         return saturatingMultiply(ComputeTuning.BASE_CWU_COST, costMultiplier);
+    }
+
+    public static int overloadStep(int rating) {
+        return rating <= 0 ? 0 : Math.max(1, rating / 4);
     }
 
     public static int allocationLimit(int rating) {

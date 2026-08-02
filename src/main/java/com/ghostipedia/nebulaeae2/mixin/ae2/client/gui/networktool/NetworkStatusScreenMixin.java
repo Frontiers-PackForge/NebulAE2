@@ -90,10 +90,10 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
                 snapshot.passiveShortfallCwut() > 0
                         ? style.getColor(PaletteColor.ERROR).toARGB()
                         : nebulae$loadColor(snapshot.reservedCwut(), snapshot.capacityCwut()));
-        nebulae$drawMetric(graphics, "work_ceiling", nebulae$rate(snapshot.workCeilingCwut()), 41, textColor);
+        nebulae$drawMetric(graphics, "work_capacity", nebulae$rate(snapshot.workBudgetCwut()), 41, textColor);
         nebulae$drawMetric(graphics, "recent_work",
                 nebulae$recentWork(snapshot.recentWorkAverageCwut(), snapshot.recentWorkPeakCwut()), 57,
-                nebulae$loadColor(snapshot.recentWorkAverageCwut(), snapshot.workCeilingCwut()));
+                nebulae$loadColor(snapshot.recentWorkAverageCwut(), snapshot.workBudgetCwut()));
         nebulae$drawMetric(graphics, "debt", nebulae$work(snapshot.debtCwu()), 73,
                 snapshot.debtCwu() > 0 ? WARNING_COLOR : textColor);
         nebulae$drawMetric(graphics, "sources_nodes",
@@ -102,8 +102,10 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
                 snapshot.recentThrottledOperations() > 0 ? WARNING_COLOR : textColor);
         nebulae$drawMetric(graphics, "channel_overhead", nebulae$rate(snapshot.channelOverloadCwut()), 121,
                 textColor);
-        nebulae$drawMetric(graphics, "channels", nebulae$count(status.getChannelsUsed()), 151, textColor);
-        nebulae$drawMetric(graphics, "power_usage", nebulae$powerRate(status.getAveragePowerUsage()), 166,
+        nebulae$drawMetric(graphics, "device_scale",
+                nebulae$deviceScale(snapshot.channelDeviceCount(), snapshot.deviceScaleCwut()), 137, textColor);
+        nebulae$drawMetric(graphics, "channels", nebulae$count(status.getChannelsUsed()), 167, textColor);
+        nebulae$drawMetric(graphics, "power_usage", nebulae$powerRate(status.getAveragePowerUsage()), 182,
                 textColor);
         callback.cancel();
     }
@@ -153,6 +155,14 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
                 "gui.nebulaeae2.controller_compute.value.recent_work",
                 nebulae$compact(average),
                 nebulae$compact(peak));
+    }
+
+    @Unique
+    private static Component nebulae$deviceScale(long devices, long scaleCwut) {
+        return Component.translatable(
+                "gui.nebulaeae2.controller_compute.value.device_scale",
+                nebulae$compact(devices),
+                nebulae$compact(scaleCwut));
     }
 
     @Unique

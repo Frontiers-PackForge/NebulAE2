@@ -16,15 +16,17 @@ public final class NodeWorkloadClassifier {
 
     public static boolean requiresScheduledWorkGrant(IGridNode node) {
         var owner = node.getOwner();
-        return owner instanceof IOBusPart
-                || owner instanceof AnnihilationPlanePart
-                || owner instanceof IOPortBlockEntity
-                || owner instanceof InterfaceLogicHost
-                || isActiveFormationPlane(node);
+        var representation = node.getVisualRepresentation();
+        return requiresScheduledWorkGrant(
+                owner.getClass(),
+                representation == null ? null : representation.getId());
     }
 
-    private static boolean isActiveFormationPlane(IGridNode node) {
-        var representation = node.getVisualRepresentation();
-        return representation != null && representation.getId().equals(ACTIVE_FORMATION_PLANE);
+    public static boolean requiresScheduledWorkGrant(Class<?> ownerType, ResourceLocation representation) {
+        return IOBusPart.class.isAssignableFrom(ownerType)
+                || AnnihilationPlanePart.class.isAssignableFrom(ownerType)
+                || IOPortBlockEntity.class.isAssignableFrom(ownerType)
+                || InterfaceLogicHost.class.isAssignableFrom(ownerType)
+                || ACTIVE_FORMATION_PLANE.equals(representation);
     }
 }

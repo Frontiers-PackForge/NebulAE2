@@ -3,7 +3,7 @@
   "includes": ["common/common.json"],
   "background": {
     "texture": "nebulaeae2:textures/guis/controller_compute.png",
-    "srcRect": [0, 0, 195, 170]
+    "srcRect": [0, 0, 240, 184]
   },
   "text": {
     "dialog_title": {
@@ -21,7 +21,7 @@
       "height": 20
     },
     "scrollbar": {
-      "left": 175,
+      "left": 220,
       "top": 39,
       "height": 78
     }

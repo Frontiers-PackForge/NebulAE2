@@ -8,5 +8,7 @@ public interface IComputeSource extends IGridNodeService {
 
     UUID sourceId();
 
-    long availableCwut();
+    long installedCwut();
+
+    long commitCwut(UUID gridLeaseId, long serverTick, long targetTotalCwut);
 }

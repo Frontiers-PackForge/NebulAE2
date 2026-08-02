@@ -38,6 +38,8 @@ public abstract class NetworkStatusMixin implements NetworkStatusComputeExtensio
                 data.readLong(),
                 data.readLong(),
                 data.readLong(),
+                data.readLong(),
+                data.readLong(),
                 data.readDouble(),
                 data.readLong(),
                 data.readLong(),
@@ -54,7 +56,9 @@ public abstract class NetworkStatusMixin implements NetworkStatusComputeExtensio
     @Inject(method = "write", at = @At("TAIL"))
     private void nebulae$writeComputeSnapshot(RegistryFriendlyByteBuf data, CallbackInfo callback) {
         data.writeLong(nebulae$computeSnapshot.capacityCwut());
+        data.writeLong(nebulae$computeSnapshot.fundedCwut());
         data.writeLong(nebulae$computeSnapshot.reservedCwut());
+        data.writeLong(nebulae$computeSnapshot.passiveShortfallCwut());
         data.writeLong(nebulae$computeSnapshot.channelOverloadCwut());
         data.writeLong(nebulae$computeSnapshot.workBudgetCwut());
         data.writeLong(nebulae$computeSnapshot.workUsedCwut());

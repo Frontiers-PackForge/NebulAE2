@@ -34,7 +34,7 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
     private static final int LABEL_LEFT = 16;
 
     @Unique
-    private static final int VALUE_RIGHT = 179;
+    private static final int VALUE_RIGHT = 224;
 
     @Unique
     private static final int WARNING_COLOR = 0xFF7A4B00;
@@ -77,22 +77,33 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
         var snapshot = ((NetworkStatusComputeExtension) (Object) status).nebulae$getComputeSnapshot();
         int textColor = style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
 
+        if (snapshot.passiveShortfallCwut() > 0) {
+            var shortfall = Component.translatable(
+                    "gui.nebulaeae2.controller_compute.shortfall",
+                    nebulae$compact(snapshot.passiveShortfallCwut()));
+            graphics.drawString(font, shortfall, VALUE_RIGHT - font.width(shortfall), 6,
+                    style.getColor(PaletteColor.ERROR).toARGB(), false);
+        }
+
         nebulae$drawMetric(graphics, "capacity",
-                nebulae$ratePair(snapshot.reservedCwut(), snapshot.capacityCwut()), 24,
-                nebulae$loadColor(snapshot.reservedCwut(), snapshot.capacityCwut()));
-        nebulae$drawMetric(graphics, "work_capacity", nebulae$rate(snapshot.workCeilingCwut()), 37, textColor);
+                nebulae$ratePair(snapshot.reservedCwut(), snapshot.capacityCwut()), 25,
+                snapshot.passiveShortfallCwut() > 0
+                        ? style.getColor(PaletteColor.ERROR).toARGB()
+                        : nebulae$loadColor(snapshot.reservedCwut(), snapshot.capacityCwut()));
+        nebulae$drawMetric(graphics, "work_ceiling", nebulae$rate(snapshot.workCeilingCwut()), 41, textColor);
         nebulae$drawMetric(graphics, "recent_work",
-                nebulae$recentWork(snapshot.recentWorkAverageCwut(), snapshot.recentWorkPeakCwut()), 50,
+                nebulae$recentWork(snapshot.recentWorkAverageCwut(), snapshot.recentWorkPeakCwut()), 57,
                 nebulae$loadColor(snapshot.recentWorkAverageCwut(), snapshot.workCeilingCwut()));
-        nebulae$drawMetric(graphics, "debt", nebulae$work(snapshot.debtCwu()), 63,
+        nebulae$drawMetric(graphics, "debt", nebulae$work(snapshot.debtCwu()), 73,
                 snapshot.debtCwu() > 0 ? WARNING_COLOR : textColor);
-        nebulae$drawMetric(graphics, "sources", nebulae$count(snapshot.sourceCount()), 76, textColor);
-        nebulae$drawMetric(graphics, "nodes", nebulae$count(snapshot.trackedNodeCount()), 89, textColor);
-        nebulae$drawMetric(graphics, "throttled", nebulae$count(snapshot.recentThrottledOperations()), 102,
+        nebulae$drawMetric(graphics, "sources_nodes",
+                nebulae$countPair(snapshot.sourceCount(), snapshot.trackedNodeCount()), 89, textColor);
+        nebulae$drawMetric(graphics, "throttled", nebulae$count(snapshot.recentThrottledOperations()), 105,
                 snapshot.recentThrottledOperations() > 0 ? WARNING_COLOR : textColor);
-        nebulae$drawMetric(graphics, "channel_overhead", nebulae$rate(snapshot.channelOverloadCwut()), 115, textColor);
-        nebulae$drawMetric(graphics, "channels", nebulae$count(status.getChannelsUsed()), 139, textColor);
-        nebulae$drawMetric(graphics, "power_usage", nebulae$powerRate(status.getAveragePowerUsage()), 152,
+        nebulae$drawMetric(graphics, "channel_overhead", nebulae$rate(snapshot.channelOverloadCwut()), 121,
+                textColor);
+        nebulae$drawMetric(graphics, "channels", nebulae$count(status.getChannelsUsed()), 151, textColor);
+        nebulae$drawMetric(graphics, "power_usage", nebulae$powerRate(status.getAveragePowerUsage()), 166,
                 textColor);
         callback.cancel();
     }
@@ -121,6 +132,14 @@ public abstract class NetworkStatusScreenMixin extends AEBaseScreen<NetworkStatu
     @Unique
     private static Component nebulae$rate(long value) {
         return Component.translatable("gui.nebulaeae2.controller_compute.value.rate", nebulae$compact(value));
+    }
+
+    @Unique
+    private static Component nebulae$countPair(long first, long second) {
+        return Component.translatable(
+                "gui.nebulaeae2.controller_compute.value.count_pair",
+                nebulae$compact(first),
+                nebulae$compact(second));
     }
 
     @Unique

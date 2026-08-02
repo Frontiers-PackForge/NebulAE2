@@ -4,6 +4,7 @@
   "package": "com.ghostipedia.nebulaeae2.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ae2.compute.EnergyServiceAccessor",
     "ae2.compute.TickManagerServiceWorkGateMixin",
     "ae2.energy.AEBasePoweredBlockEntityExternalPowerMixin",
     "ae2.energy.EnergyAcceptorPartExternalPowerMixin",

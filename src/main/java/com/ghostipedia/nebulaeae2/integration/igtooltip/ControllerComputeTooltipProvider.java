@@ -34,6 +34,7 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
     private static final String DATA = "NebulaeControllerCompute";
     private static final String CAPACITY_CWUT = "CapacityCwut";
     private static final String RESERVED_CWUT = "ReservedCwut";
+    private static final String PASSIVE_SHORTFALL_CWUT = "PassiveShortfallCwut";
     private static final String WORK_CEILING_CWUT = "WorkCeilingCwut";
     private static final String RECENT_WORK_AVERAGE_CWUT = "RecentWorkAverageCwut";
     private static final String RECENT_WORK_PEAK_CWUT = "RecentWorkPeakCwut";
@@ -71,6 +72,7 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
         CompoundTag telemetry = new CompoundTag();
         telemetry.putLong(CAPACITY_CWUT, snapshot.capacityCwut());
         telemetry.putLong(RESERVED_CWUT, snapshot.reservedCwut());
+        telemetry.putLong(PASSIVE_SHORTFALL_CWUT, snapshot.passiveShortfallCwut());
         telemetry.putLong(WORK_CEILING_CWUT, snapshot.workCeilingCwut());
         telemetry.putDouble(RECENT_WORK_AVERAGE_CWUT, snapshot.recentWorkAverageCwut());
         telemetry.putLong(RECENT_WORK_PEAK_CWUT, snapshot.recentWorkPeakCwut());
@@ -95,6 +97,7 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
         CompoundTag telemetry = serverData.getCompound(DATA);
         long capacityCwut = telemetry.getLong(CAPACITY_CWUT);
         long reservedCwut = telemetry.getLong(RESERVED_CWUT);
+        long passiveShortfallCwut = telemetry.getLong(PASSIVE_SHORTFALL_CWUT);
         long workCeilingCwut = telemetry.getLong(WORK_CEILING_CWUT);
         double recentWorkAverageCwut = telemetry.getDouble(RECENT_WORK_AVERAGE_CWUT);
         long recentWorkPeakCwut = telemetry.getLong(RECENT_WORK_PEAK_CWUT);
@@ -104,10 +107,16 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
 
         tooltip.addLine(Component.translatable(
                 "tooltip.nebulaeae2.controller.compute_load",
-                value(reservedCwut, loadColor(reservedCwut, capacityCwut)),
+                value(reservedCwut,
+                        passiveShortfallCwut > 0 ? ChatFormatting.RED : loadColor(reservedCwut, capacityCwut)),
                 value(capacityCwut, ChatFormatting.AQUA)));
+        if (passiveShortfallCwut > 0) {
+            tooltip.addLine(Component.translatable(
+                    "tooltip.nebulaeae2.controller.passive_shortfall",
+                    value(passiveShortfallCwut, ChatFormatting.RED)));
+        }
         tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.work_capacity",
+                "tooltip.nebulaeae2.controller.work_ceiling",
                 value(workCeilingCwut, ChatFormatting.AQUA)));
         tooltip.addLine(Component.translatable(
                 "tooltip.nebulaeae2.controller.recent_work",

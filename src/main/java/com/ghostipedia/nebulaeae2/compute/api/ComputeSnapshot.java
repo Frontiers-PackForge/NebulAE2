@@ -2,7 +2,9 @@ package com.ghostipedia.nebulaeae2.compute.api;
 
 public record ComputeSnapshot(
         long capacityCwut,
+        long fundedCwut,
         long reservedCwut,
+        long passiveShortfallCwut,
         long channelOverloadCwut,
         long workBudgetCwut,
         long workUsedCwut,
@@ -18,9 +20,5 @@ public record ComputeSnapshot(
 
     public long workCeilingCwut() {
         return Math.max(0, capacityCwut - reservedCwut);
-    }
-
-    public long availableCwut() {
-        return Math.max(0, workBudgetCwut - workUsedCwut);
     }
 }

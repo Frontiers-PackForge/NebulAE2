@@ -4,6 +4,8 @@ import com.ghostipedia.nebulaeae2.compute.GridComputeService;
 import com.ghostipedia.nebulaeae2.compute.api.IComputeService;
 import com.ghostipedia.nebulaeae2.config.AE2ChannelConfigPolicy;
 import com.ghostipedia.nebulaeae2.controller.ControllerVisualStateSync;
+import com.ghostipedia.nebulaeae2.crafting.follow.CraftingFollowNetworking;
+import com.ghostipedia.nebulaeae2.locating.ProviderLocatingNetworking;
 import com.ghostipedia.nebulaeae2.pattern.PatternAuthorship;
 
 import com.mojang.logging.LogUtils;
@@ -26,6 +28,8 @@ public final class NebulaeAE2 {
         GridServices.register(IComputeService.class, GridComputeService.class);
         ControllerVisualStateSync.init();
         PatternAuthorship.init(modBus);
+        modBus.addListener(CraftingFollowNetworking::register);
+        modBus.addListener(ProviderLocatingNetworking::register);
         LOGGER.info("Nebulae initialised - Beginning AE2 Interception");
     }
 }

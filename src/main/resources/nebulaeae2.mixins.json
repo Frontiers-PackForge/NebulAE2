@@ -41,6 +41,11 @@
     "ae2.client.gui.networktool.NetworkStatusScreenMixin"
     "ae2.client.gui.pattern.PatternEncodingTermScreenScalingMixin",
     "ae2.client.gui.pattern.PatternEncodingStyleMixin",
+    "ae2.client.gui.patternprovider.PatternProviderScreenBlockingMixin",
+    "ae2.client.integration.emi.EmiCraftingFavoritesMixin",
+    "emi.CraftingCpuModQueryMixin",
+    "ae2.client.gui.crafting.CraftConfirmTableStockMixin",
+    "ae2.client.gui.crafting.CraftingStatusTableStockMixin"
   ],
   "injectors": {
     "defaultRequire": 1

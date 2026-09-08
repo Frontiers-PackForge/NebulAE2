@@ -1,4 +1,5 @@
 dependencies {
+    testImplementation('org.junit.jupiter:junit-jupiter:5.10.3')
     compileOnly(libs.jetbrains.annotations)
 
     implementation(files("libs/gtceu-1.21.1-8.0.0.jar"))

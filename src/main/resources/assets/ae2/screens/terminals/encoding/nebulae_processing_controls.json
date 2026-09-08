@@ -1,0 +1,20 @@
+{
+  "widgets": {
+    "nebulaeMultiplyPattern": {
+      "left": 89,
+      "bottom": 159,
+      "width": 8,
+      "height": 8
+    },
+    "nebulaeDividePattern": {
+      "left": 99,
+      "bottom": 159,
+      "width": 8,
+      "height": 8
+    },
+    "processingCycleOutput": {
+      "left": 98,
+      "bottom": 149
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "includes": [
+    "wireless_pattern_encoding_terminal.json",
+    "../terminals/encoding/nebulae_processing_controls.json"
+  ]
+}

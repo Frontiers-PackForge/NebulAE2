@@ -20,6 +20,8 @@
     "ae2.qnb.QuantumBridgeFrequencyMixin"
     "ae2.crafting.pattern.EncodedPatternItemAuthorshipMixin",
     "ae2.crafting.pattern.PatternDetailsHelperAuthorshipMixin",
+    "ae2.menu.crafting.CraftConfirmMenuLocateMixin",
+    "ae2.menu.crafting.CraftingCPUMenuLocateMixin",
     "ae2.menu.pattern.PatternEncodingTermMenuScalingMixin",
     "ae2.menu.pattern.PatternEncodingTermMenuAuthorshipMixin",
     "ae2.menu.patternprovider.PatternProviderMenuBlockingMixin",
@@ -46,6 +48,7 @@
     "emi.CraftingCpuModQueryMixin",
     "ae2.client.gui.crafting.CraftConfirmTableStockMixin",
     "ae2.client.gui.crafting.CraftingStatusTableStockMixin"
+    "ae2.client.gui.crafting.CraftingProviderLocateTooltipMixin"
   ],
   "injectors": {
     "defaultRequire": 1

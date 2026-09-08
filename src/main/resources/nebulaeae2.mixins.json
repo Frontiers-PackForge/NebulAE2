@@ -18,8 +18,11 @@
     "ae2.pathing.PathingCalculationSoftChannelMixin",
     "ae2.pathing.PathingServiceSoftChannelMixin",
     "ae2.qnb.QuantumBridgeFrequencyMixin"
+    "ae2.crafting.follow.CraftingCpuLogicFollowMixin",
+    "ae2.crafting.follow.ExecutingCraftingJobFollowAccessor",
     "ae2.crafting.pattern.EncodedPatternItemAuthorshipMixin",
     "ae2.crafting.pattern.PatternDetailsHelperAuthorshipMixin",
+    "ae2.menu.crafting.CraftConfirmMenuFollowMixin",
     "ae2.menu.crafting.CraftConfirmMenuLocateMixin",
     "ae2.menu.crafting.CraftingCPUMenuLocateMixin",
     "ae2.menu.pattern.PatternEncodingTermMenuScalingMixin",
@@ -41,6 +44,11 @@
     "ae2.client.render.cablebus.CableBuilderOverloadColorMixin",
     "ae2.client.gui.InitScreensMixin",
     "ae2.client.gui.networktool.NetworkStatusScreenMixin"
+    "ae2.client.gui.crafting.CraftAmountScreenFollowMixin",
+    "ae2.client.gui.crafting.CraftConfirmScreenFollowMixin",
+    "ae2.client.gui.crafting.CraftConfirmStyleMixin",
+    "ae2.client.gui.crafting.PendingCraftingJobsFollowAccessor",
+    "ae2.client.gui.crafting.PendingCraftingJobsFollowMixin",
     "ae2.client.gui.pattern.PatternEncodingTermScreenScalingMixin",
     "ae2.client.gui.pattern.PatternEncodingStyleMixin",
     "ae2.client.gui.patternprovider.PatternProviderScreenBlockingMixin",

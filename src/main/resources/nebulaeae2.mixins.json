@@ -18,7 +18,21 @@
     "ae2.pathing.PathingCalculationSoftChannelMixin",
     "ae2.pathing.PathingServiceSoftChannelMixin",
     "ae2.qnb.QuantumBridgeFrequencyMixin"
+    "ae2.crafting.pattern.EncodedPatternItemAuthorshipMixin",
+    "ae2.crafting.pattern.PatternDetailsHelperAuthorshipMixin",
     "ae2.menu.pattern.PatternEncodingTermMenuScalingMixin",
+    "ae2.menu.pattern.PatternEncodingTermMenuAuthorshipMixin",
+    "ae2.menu.patternprovider.PatternProviderMenuBlockingMixin",
+    "ae2.patternprovider.PatternProviderLogicBlockingMixin",
+    "ae2.patternprovider.PatternProviderTargetCacheBlockingMixin",
+    "gtceu.ae2.MEPatternBufferBlockingMixin",
+    "merequester.RequestStateComputePreflightMixin",
+    "ae2.crafting.CraftingCPUClusterDurationMixin",
+    "ae2.crafting.stock.CraftingCpuLogicStockAccessor",
+    "ae2.crafting.stock.CraftingCpuLogicStockMixin",
+    "ae2.crafting.stock.ExecutingCraftingJobStockMixin",
+    "ae2.menu.crafting.CraftConfirmMenuStockMixin",
+    "ae2.menu.crafting.CraftingCPUMenuStockMixin"
   ],
   "client": [
     "ae2.client.render.cablebus.CableBusBakedModelStraightChannelsMixin",

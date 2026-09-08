@@ -3,6 +3,7 @@ package com.ghostipedia.nebulaeae2;
 import com.ghostipedia.nebulaeae2.compute.GridComputeService;
 import com.ghostipedia.nebulaeae2.compute.api.IComputeService;
 import com.ghostipedia.nebulaeae2.config.AE2ChannelConfigPolicy;
+import com.ghostipedia.nebulaeae2.controller.ControllerVisualStateSync;
 
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
@@ -22,6 +23,7 @@ public final class NebulaeAE2 {
     public NebulaeAE2(IEventBus modBus, ModContainer modContainer) {
         AE2ChannelConfigPolicy.enforce();
         GridServices.register(IComputeService.class, GridComputeService.class);
+        ControllerVisualStateSync.init();
         LOGGER.info("Nebulae initialised - Beginning AE2 Interception");
     }
 }

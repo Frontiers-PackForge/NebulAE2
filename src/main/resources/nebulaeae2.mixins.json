@@ -20,8 +20,6 @@
     "ae2.qnb.QuantumBridgeFrequencyMixin"
   ],
   "client": [
-    "gtceu.client.bloom.BloomShaderManagerAlphaCutoutMixin",
-    "gtceu.client.bloom.GTSodiumCompatAlphaCutoutMixin",
     "ae2.client.render.cablebus.CableBusBakedModelStraightChannelsMixin",
     "ae2.client.render.cablebus.CableBuilderOverloadColorMixin",
     "ae2.client.gui.InitScreensMixin",

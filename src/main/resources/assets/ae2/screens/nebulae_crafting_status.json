@@ -1,0 +1,3 @@
+{
+  "includes": ["crafting_status.json", "nebulae_cpu_controls.json"]
+}

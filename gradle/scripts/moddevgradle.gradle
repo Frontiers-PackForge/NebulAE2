@@ -12,6 +12,11 @@ neoForge {
         }
     }
 
+    unitTest {
+        enable()
+        testedMod = mods.getByName(mod_id)
+    }
+
     runs {
         client {
             client()

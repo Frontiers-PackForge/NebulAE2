@@ -3,7 +3,6 @@ package com.ghostipedia.nebulaeae2.client;
 import com.ghostipedia.nebulaeae2.NebulaeAE2;
 import com.ghostipedia.nebulaeae2.channel.ChannelOverloadPolicy;
 import com.ghostipedia.nebulaeae2.compute.ComputeTuning;
-import com.ghostipedia.nebulaeae2.compute.NodeWorkloadClassifier;
 
 import appeng.api.implementations.parts.ICablePart;
 import appeng.api.networking.IInWorldGridNodeHost;
@@ -31,6 +30,7 @@ import appeng.parts.p2p.P2PTunnelPart;
 import appeng.parts.reporting.AbstractReportingPart;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -88,10 +88,6 @@ public final class ComputeReservationTooltipHandler {
             id("ae2", "chest"),
             id("extendedae", "ex_drive"),
             id("megacells", "cell_dock"));
-    private static final Set<ResourceLocation> SCHEDULED_WORK_FALLBACKS = Set.of(
-            id("ae2", "io_port"),
-            id("extendedae", "ex_io_port"),
-            id("extendedae", "active_formation_plane"));
     private static final Set<ResourceLocation> CHANNEL_DEVICE_FALLBACKS = Set.of(
             id("megacells", "cell_dock"),
             id("megacells", "decompression_module"),
@@ -154,11 +150,6 @@ public final class ComputeReservationTooltipHandler {
         if (!profile.indexSource() && StorageCells.isCellHandled(stack)) {
             profile = profile.withIndexSource();
         }
-        appendPassiveReservation(event, profile);
-        appendDynamicCosts(event, profile);
-    }
-
-    private static void appendPassiveReservation(ItemTooltipEvent event, ComputeCostProfile profile) {
         long baseReservation = profile.baseReservation();
         var tooltip = event.getToolTip();
         if (baseReservation > 0) {
@@ -166,6 +157,21 @@ public final class ComputeReservationTooltipHandler {
                     "tooltip.nebulaeae2.compute.base_reservation",
                     baseReservation).withStyle(ChatFormatting.AQUA));
         }
+        if (!Screen.hasShiftDown()) {
+            if (profile.networkNode() || profile.channelDevice() || profile.storageProvider()
+                    || profile.craftingProvider() || profile.wirelessAccessPoint() || profile.wirelessBooster()
+                    || profile.interfaceStocking() || profile.indexSource() || profile.cableRating() > 0) {
+                tooltip.add(Component.translatable("tooltip.nebulaeae2.compute.hold_shift")
+                        .withStyle(ChatFormatting.GRAY));
+            }
+            return;
+        }
+        appendPassiveReservation(event, profile);
+        appendDynamicCosts(event, profile);
+    }
+
+    private static void appendPassiveReservation(ItemTooltipEvent event, ComputeCostProfile profile) {
+        var tooltip = event.getToolTip();
         if (profile.storageProvider()) {
             tooltip.add(Component.translatable(
                     "tooltip.nebulaeae2.compute.storage_provider",
@@ -194,11 +200,6 @@ public final class ComputeReservationTooltipHandler {
             tooltip.add(Component.translatable(
                     "tooltip.nebulaeae2.compute.wireless_booster",
                     ComputeTuning.WIRELESS_BOOSTER_RESERVATION).withStyle(ChatFormatting.GRAY));
-        }
-        if (profile.scheduledWork()) {
-            tooltip.add(Component.translatable(
-                    "tooltip.nebulaeae2.compute.active_work",
-                    ComputeTuning.SCHEDULED_WORK_CWU).withStyle(ChatFormatting.GRAY));
         }
         if (profile.interfaceStocking()) {
             tooltip.add(Component.translatable(
@@ -257,9 +258,6 @@ public final class ComputeReservationTooltipHandler {
                 || craftingProvider
                 || STORAGE_PROVIDER_FALLBACKS.contains(itemId)
                 || CHANNEL_DEVICE_FALLBACKS.contains(itemId);
-        boolean scheduledWork = (ownerType != null
-                && NodeWorkloadClassifier.requiresScheduledWorkGrant(ownerType, itemId))
-                || SCHEDULED_WORK_FALLBACKS.contains(itemId);
         boolean cable = part && isType(ownerType, ICablePart.class);
         int cableRating = cable ?
                 (isType(ownerType, DenseCablePart.class) ?
@@ -277,7 +275,6 @@ public final class ComputeReservationTooltipHandler {
                 craftingProvider,
                 interfaceStocking,
                 indexSource,
-                scheduledWork,
                 wirelessAccessPoint,
                 itemId.equals(WIRELESS_BOOSTER),
                 cableRating,
@@ -355,7 +352,6 @@ public final class ComputeReservationTooltipHandler {
             boolean craftingProvider,
             boolean interfaceStocking,
             boolean indexSource,
-            boolean scheduledWork,
             boolean wirelessAccessPoint,
             boolean wirelessBooster,
             int cableRating,
@@ -380,7 +376,6 @@ public final class ComputeReservationTooltipHandler {
                     craftingProvider,
                     interfaceStocking,
                     true,
-                    scheduledWork,
                     wirelessAccessPoint,
                     wirelessBooster,
                     cableRating,

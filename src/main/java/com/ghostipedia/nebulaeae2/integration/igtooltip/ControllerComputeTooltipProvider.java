@@ -1,20 +1,15 @@
 package com.ghostipedia.nebulaeae2.integration.igtooltip;
 
-import static com.ghostipedia.nebulaeae2.integration.igtooltip.ComputeTooltipFormatting.loadColor;
-import static com.ghostipedia.nebulaeae2.integration.igtooltip.ComputeTooltipFormatting.value;
-
 import com.ghostipedia.nebulaeae2.NebulaeAE2;
-import com.ghostipedia.nebulaeae2.compute.api.ComputeSnapshot;
 import com.ghostipedia.nebulaeae2.compute.api.IComputeService;
 import com.gregtechceu.gtceu.api.capability.compat.FeCompat;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-
 import appeng.api.config.PowerUnit;
 import appeng.api.integrations.igtooltip.ClientRegistration;
 import appeng.api.integrations.igtooltip.CommonRegistration;
@@ -25,45 +20,25 @@ import appeng.api.integrations.igtooltip.providers.BodyProvider;
 import appeng.api.integrations.igtooltip.providers.ServerDataProvider;
 import appeng.block.networking.ControllerBlock;
 import appeng.blockentity.networking.ControllerBlockEntity;
+import static com.ghostipedia.nebulaeae2.integration.igtooltip.ComputeTooltipFormatting.value;
 
 public final class ControllerComputeTooltipProvider implements TooltipProvider,
         BodyProvider<ControllerBlockEntity>, ServerDataProvider<ControllerBlockEntity> {
-
-    private static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(
-            NebulaeAE2.MODID,
-            "controller_compute");
+    private static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(NebulaeAE2.MODID, "controller_compute");
     private static final String DATA = "NebulaeControllerCompute";
-    private static final String CAPACITY_CWUT = "CapacityCwut";
-    private static final String RESERVED_CWUT = "ReservedCwut";
-    private static final String PASSIVE_SHORTFALL_CWUT = "PassiveShortfallCwut";
-    private static final String WORK_BUDGET_CWUT = "WorkBudgetCwut";
-    private static final String RECENT_WORK_AVERAGE_CWUT = "RecentWorkAverageCwut";
-    private static final String RECENT_WORK_PEAK_CWUT = "RecentWorkPeakCwut";
-    private static final String CHANNEL_OVERLOAD_CWUT = "ChannelOverloadCwut";
-    private static final String DEBT_CWU = "DebtCwu";
-    private static final String SOURCE_COUNT = "SourceCount";
-    private static final String TRACKED_NODE_COUNT = "TrackedNodeCount";
-    private static final String CHANNEL_DEVICE_COUNT = "ChannelDeviceCount";
-    private static final String DEVICE_SCALE_CWUT = "DeviceScaleCwut";
-    private static final String THROTTLED_OPERATIONS = "ThrottledOperations";
-    private static final String RECOVERY_OPERATIONS = "RecoveryOperations";
-    private static final String USED_CHANNELS = "UsedChannels";
-    private static final String EU_DEMAND = "EuDemand";
 
     @Override
     public void registerCommon(CommonRegistration registration) {
         CableComputeTooltipProvider.registerCommon();
+        CraftingCpuTooltipProvider.registerCommon(registration);
         registration.addBlockEntityData(ID, ControllerBlockEntity.class, this);
     }
 
     @Override
     public void registerClient(ClientRegistration registration) {
         CableComputeTooltipProvider.registerClient();
-        registration.addBlockEntityBody(
-                ControllerBlockEntity.class,
-                ControllerBlock.class,
-                ID,
-                this);
+        CraftingCpuTooltipProvider.registerClient(registration);
+        registration.addBlockEntityBody(ControllerBlockEntity.class, ControllerBlock.class, ID, this);
     }
 
     @Override
@@ -72,110 +47,23 @@ public final class ControllerComputeTooltipProvider implements TooltipProvider,
         if (grid == null) {
             return;
         }
-
-        ComputeSnapshot snapshot = grid.getService(IComputeService.class).snapshot();
-        CompoundTag telemetry = new CompoundTag();
-        telemetry.putLong(CAPACITY_CWUT, snapshot.capacityCwut());
-        telemetry.putLong(RESERVED_CWUT, snapshot.reservedCwut());
-        telemetry.putLong(PASSIVE_SHORTFALL_CWUT, snapshot.passiveShortfallCwut());
-        telemetry.putLong(WORK_BUDGET_CWUT, snapshot.workBudgetCwut());
-        telemetry.putDouble(RECENT_WORK_AVERAGE_CWUT, snapshot.recentWorkAverageCwut());
-        telemetry.putLong(RECENT_WORK_PEAK_CWUT, snapshot.recentWorkPeakCwut());
-        telemetry.putLong(CHANNEL_OVERLOAD_CWUT, snapshot.channelOverloadCwut());
-        telemetry.putLong(DEBT_CWU, snapshot.debtCwu());
-        telemetry.putInt(SOURCE_COUNT, snapshot.sourceCount());
-        telemetry.putInt(TRACKED_NODE_COUNT, snapshot.trackedNodeCount());
-        telemetry.putLong(CHANNEL_DEVICE_COUNT, snapshot.channelDeviceCount());
-        telemetry.putLong(DEVICE_SCALE_CWUT, snapshot.deviceScaleCwut());
-        telemetry.putLong(THROTTLED_OPERATIONS, snapshot.recentThrottledOperations());
-        telemetry.putLong(RECOVERY_OPERATIONS, snapshot.recentRecoveryOperations());
-        telemetry.putInt(USED_CHANNELS, grid.getPathingService().getUsedChannels());
-        telemetry.putDouble(EU_DEMAND, aeToEu(grid.getEnergyService().getAvgPowerUsage()));
-        serverData.put(DATA, telemetry);
+        CompoundTag data = GridComputeTooltipData.write(grid.getService(IComputeService.class).snapshot());
+        data.putInt("UsedChannels", grid.getPathingService().getUsedChannels());
+        data.putDouble("EuDemand", Math.max(0, PowerUnit.AE.convertTo(PowerUnit.FE,
+                grid.getEnergyService().getAvgPowerUsage()) / FeCompat.ratio(false)));
+        serverData.put(DATA, data);
     }
 
     @Override
     public void buildTooltip(ControllerBlockEntity controller, TooltipContext context, TooltipBuilder tooltip) {
-        CompoundTag serverData = context.serverData();
-        if (!serverData.contains(DATA, Tag.TAG_COMPOUND)) {
+        if (!context.serverData().contains(DATA, Tag.TAG_COMPOUND)) {
             return;
         }
-
-        CompoundTag telemetry = serverData.getCompound(DATA);
-        long capacityCwut = telemetry.getLong(CAPACITY_CWUT);
-        long reservedCwut = telemetry.getLong(RESERVED_CWUT);
-        long passiveShortfallCwut = telemetry.getLong(PASSIVE_SHORTFALL_CWUT);
-        long workBudgetCwut = telemetry.getLong(WORK_BUDGET_CWUT);
-        double recentWorkAverageCwut = telemetry.getDouble(RECENT_WORK_AVERAGE_CWUT);
-        long recentWorkPeakCwut = telemetry.getLong(RECENT_WORK_PEAK_CWUT);
-        long channelOverloadCwut = telemetry.getLong(CHANNEL_OVERLOAD_CWUT);
-        long debtCwu = telemetry.getLong(DEBT_CWU);
-        long throttledOperations = telemetry.getLong(THROTTLED_OPERATIONS);
-
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.compute_load",
-                value(reservedCwut,
-                        passiveShortfallCwut > 0 ? ChatFormatting.RED : loadColor(reservedCwut, capacityCwut)),
-                value(capacityCwut, ChatFormatting.AQUA)));
-        if (passiveShortfallCwut > 0) {
-            tooltip.addLine(Component.translatable(
-                    "tooltip.nebulaeae2.controller.passive_shortfall",
-                    value(passiveShortfallCwut, ChatFormatting.RED)));
-        }
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.work_capacity",
-                value(workBudgetCwut, ChatFormatting.AQUA)));
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.recent_work",
-                value(recentWorkAverageCwut, loadColor(recentWorkAverageCwut, workBudgetCwut)),
-                value(recentWorkPeakCwut, ChatFormatting.AQUA)));
-        if (channelOverloadCwut > 0) {
-            tooltip.addLine(Component.translatable(
-                    "tooltip.nebulaeae2.controller.channel_overhead",
-                    value(channelOverloadCwut, ChatFormatting.AQUA)));
-        }
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.channel_devices",
-                value(telemetry.getLong(CHANNEL_DEVICE_COUNT), ChatFormatting.AQUA)));
-        long deviceScaleCwut = telemetry.getLong(DEVICE_SCALE_CWUT);
-        if (deviceScaleCwut > 0) {
-            tooltip.addLine(Component.translatable(
-                    "tooltip.nebulaeae2.controller.device_scale",
-                    value(deviceScaleCwut, ChatFormatting.AQUA)));
-        }
-        if (debtCwu > 0) {
-            tooltip.addLine(Component.translatable(
-                    "tooltip.nebulaeae2.controller.debt",
-                    value(debtCwu, ChatFormatting.RED)));
-        }
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.sources",
-                value(telemetry.getInt(SOURCE_COUNT), ChatFormatting.AQUA)));
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.nodes",
-                value(telemetry.getInt(TRACKED_NODE_COUNT), ChatFormatting.AQUA)));
-        if (throttledOperations > 0) {
-            tooltip.addLine(Component.translatable(
-                    "tooltip.nebulaeae2.controller.throttled_operations",
-                    value(throttledOperations, ChatFormatting.RED)));
-        }
-        long recoveryOperations = telemetry.getLong(RECOVERY_OPERATIONS);
-        if (recoveryOperations > 0) {
-            tooltip.addLine(Component.translatable(
-                    "tooltip.nebulaeae2.controller.recovery_operations",
-                    value(recoveryOperations, ChatFormatting.YELLOW)));
-        }
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.channels",
-                value(telemetry.getInt(USED_CHANNELS), ChatFormatting.AQUA)));
-        tooltip.addLine(Component.translatable(
-                "tooltip.nebulaeae2.controller.eu_demand",
-                value(telemetry.getDouble(EU_DEMAND), ChatFormatting.YELLOW)));
+        CompoundTag data = context.serverData().getCompound(DATA);
+        GridComputeTooltipData.append(data, tooltip, Screen.hasShiftDown());
+        tooltip.addLine(Component.translatable("tooltip.nebulaeae2.controller.channels",
+                value(data.getInt("UsedChannels"), ChatFormatting.AQUA)));
+        tooltip.addLine(Component.translatable("tooltip.nebulaeae2.controller.eu_demand",
+                value(data.getDouble("EuDemand"), ChatFormatting.YELLOW)));
     }
-
-    private static double aeToEu(double ae) {
-        double fe = PowerUnit.AE.convertTo(PowerUnit.FE, ae);
-        return Math.max(0, fe / FeCompat.ratio(false));
-    }
-
 }

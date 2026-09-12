@@ -3,6 +3,9 @@ package com.ghostipedia.nebulaeae2.compute;
 import com.ghostipedia.nebulaeae2.compute.api.ComputeSnapshot;
 import com.ghostipedia.nebulaeae2.compute.api.IComputeService;
 import com.ghostipedia.nebulaeae2.compute.api.IComputeSource;
+import com.ghostipedia.nebulaeae2.crafting.CraftingReservationLedger;
+import com.ghostipedia.nebulaeae2.crafting.CraftingComputeTuning;
+import com.ghostipedia.nebulaeae2.crafting.api.ICraftingCpuReservation;
 import com.ghostipedia.nebulaeae2.mixin.ae2.compute.EnergyServiceAccessor;
 
 import appeng.api.networking.GridFlags;
@@ -13,35 +16,35 @@ import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.storage.IStorageProvider;
+import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.blockentity.networking.WirelessAccessPointBlockEntity;
 import appeng.helpers.InterfaceLogicHost;
+import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.service.EnergyService;
 import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.nbt.CompoundTag;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public final class GridComputeService implements IComputeService, IGridServiceProvider {
 
+    private static final ConcurrentMap<UUID, PendingAdmission> PENDING_ADMISSIONS = new ConcurrentHashMap<>();
+
     private final IGrid grid;
     private final Set<IGridNode> nodes = Collections.newSetFromMap(new IdentityHashMap<>());
-    private final Map<IGridNode, Long> recoveryEligibleTicks = new IdentityHashMap<>();
-    private final Deque<IGridNode> recoveryWaiters = new ArrayDeque<>();
-    private final Set<IGridNode> recoveryWaiterSet = Collections.newSetFromMap(new IdentityHashMap<>());
-    private final Map<IGridNode, Long> recoveryLastRequestTicks = new IdentityHashMap<>();
     private final List<ComputeSourceAllocation> computeSources = new ArrayList<>();
+    private final CraftingReservationLedger craftingReservations = new CraftingReservationLedger();
     private final UUID memberId = UUID.randomUUID();
     private UUID overlayLeaseId = UUID.randomUUID();
     private List<EnergyService> overlayIdentity = List.of();
@@ -54,37 +57,9 @@ public final class GridComputeService implements IComputeService, IGridServicePr
     private long localChannelOverloadCwut;
     private long infrastructureReservedCwut;
     private long channelDeviceCount;
-    private long reservedCwut;
-    private long passiveShortfallCwut;
-    private long powerFundingShortfallCwut;
     private long channelOverloadCwut;
-    private long workBudgetCwut;
-    private long workUsedCwut;
-    private long recoveryBudgetCwut;
-    private long recoveryUsedCwut;
-    private long localDebtCwu;
-    private long debtCwu;
-    private long paidDebtThisTickCwut;
-    private long throttledOperations;
-    private long recoveryOperations;
-    private long serviceTick;
     private long cycleServerTick = Long.MIN_VALUE;
-    private final long[] telemetryWorkSamples = new long[ComputeTuning.TELEMETRY_WINDOW_TICKS];
-    private final long[] telemetryThrottleSamples = new long[ComputeTuning.TELEMETRY_WINDOW_TICKS];
-    private final long[] telemetryRecoverySamples = new long[ComputeTuning.TELEMETRY_WINDOW_TICKS];
-    private long telemetryWorkCwu;
-    private long telemetryThrottledOperations;
-    private long telemetryRecoveryOperations;
-    private double recentWorkAverageCwut;
-    private long recentWorkPeakCwut;
-    private long recentThrottledOperations;
-    private long recentRecoveryOperations;
     private long fundingServerTick;
-    private int telemetryCursor;
-    private int telemetrySampleCount;
-    private boolean workCycleStarted;
-    private boolean debtFundingShortfall;
-    private int sourceCount;
     private int ticksUntilReservationRefresh;
     private boolean reservationsDirty = true;
 
@@ -96,137 +71,109 @@ public final class GridComputeService implements IComputeService, IGridServicePr
 
     @Override
     public void onServerStartTick() {
-        refreshOverlayMembership();
-        GridComputeService authority = overlayAuthority;
-        authority.beginServerTick(authority.currentServerTick());
+        authority().refreshState();
     }
 
-    private void beginServerTick(long serverTick) {
-        if (cycleServerTick == serverTick) {
-            return;
+    private GridComputeService authority() {
+        refreshOverlayMembership();
+        return overlayAuthority;
+    }
+
+    private void refreshState() {
+        long tick = currentServerTick();
+        if (cycleServerTick != tick) {
+            cycleServerTick = tick;
+            fundingServerTick = tick;
+            fundedCwut = 0;
+            refreshCapacity();
+            refreshReservationsWhenNeeded();
+            commitCwut(totalReservedCwut());
+        } else if (overlayMembers.stream().anyMatch(member -> member.reservationsDirty)) {
+            refreshReservationsWhenNeeded();
+            commitCwut(totalReservedCwut());
         }
-        cycleServerTick = serverTick;
-        refreshCapacity();
-        refreshReservationsWhenNeeded();
-        beginWorkCycle(serverTick);
     }
 
     @Override
     public void addNode(IGridNode gridNode, @Nullable CompoundTag savedData) {
         nodes.add(gridNode);
         localChannelOverloadCwut = 0;
-        reservationsDirty = true;
+        invalidateReservations();
+        overlayAuthority.cycleServerTick = Long.MIN_VALUE;
     }
 
     @Override
     public void removeNode(IGridNode gridNode) {
         nodes.remove(gridNode);
-        overlayAuthority.recoveryEligibleTicks.remove(gridNode);
-        overlayAuthority.removeRecoveryWaiter(gridNode);
         localChannelOverloadCwut = 0;
-        reservationsDirty = true;
+        invalidateReservations();
+        overlayAuthority.cycleServerTick = Long.MIN_VALUE;
     }
 
     @Override
-    public long acquireUpTo(IGridNode node, long maximumCwut) {
-        GridComputeService authority = overlayAuthority;
-        if (authority != this) {
-            return authority.acquireUpTo(node, maximumCwut);
+    public boolean tryReserveCrafting(IGridNode node, UUID reservationId, long cwut) {
+        if (node.getLevel().getServer() == null || !node.getLevel().getServer().isSameThread()) {
+            return false;
         }
-        beginServerTick(currentServerTick());
-        if (maximumCwut <= 0) {
-            return 0;
+        GridComputeService authority = authority();
+        authority.refreshState();
+        if (!authority.belongsToOverlay(node) || authority.fundedCwut < authority.totalReservedCwut()) {
+            return false;
         }
-        if (!belongsToOverlay(node)) {
-            throttledOperations = saturatingAdd(throttledOperations, 1);
-            return 0;
+        PendingAdmission admission = new PendingAdmission(node, cwut, authority);
+        if (PENDING_ADMISSIONS.putIfAbsent(reservationId, admission) != null) {
+            return false;
         }
-        long acquiredCwut = acquireFundedCwutUpTo(maximumCwut);
-        workUsedCwut = saturatingAdd(workUsedCwut, acquiredCwut);
-        if (acquiredCwut < maximumCwut) {
-            throttledOperations = saturatingAdd(throttledOperations, 1);
+        boolean accepted = false;
+        try {
+            accepted = authority.craftingReservations.tryReserve(reservationId, cwut, authority.capacityCwut,
+                    saturatingAdd(authority.infrastructureReservedCwut, authority.channelOverloadCwut),
+                    authority::commitCwut);
+            if (accepted) {
+                GridComputeService current = authority();
+                current.refreshState();
+                current.refreshCraftingReservations();
+                accepted = current.belongsToOverlay(node) && current.fundedCwut >= current.totalReservedCwut();
+            }
+            return accepted;
+        } finally {
+            if (!accepted) {
+                finishCraftingAdmission(reservationId);
+            }
         }
-        return acquiredCwut;
     }
 
     @Override
-    public long acquireWholeUnitsUpTo(IGridNode node, long maximumUnits, long cwutPerUnit) {
-        GridComputeService authority = overlayAuthority;
-        if (authority != this) {
-            return authority.acquireWholeUnitsUpTo(node, maximumUnits, cwutPerUnit);
+    public void finishCraftingAdmission(UUID reservationId) {
+        PendingAdmission pending = PENDING_ADMISSIONS.remove(reservationId);
+        if (pending != null) {
+            pending.owner().craftingReservations.finishAdmission(reservationId);
+            pending.owner().refreshCraftingReservations();
         }
-        beginServerTick(currentServerTick());
-        if (maximumUnits <= 0 || cwutPerUnit <= 0) {
-            return 0;
-        }
-        if (!belongsToOverlay(node)) {
-            throttledOperations = saturatingAdd(throttledOperations, 1);
-            return 0;
-        }
-        long availableBudgetCwut = Math.max(0, workBudgetCwut - workUsedCwut - recoveryUsedCwut);
-        long requestedUnits = Math.min(maximumUnits, availableBudgetCwut / cwutPerUnit);
-        long requestedCwut = saturatingMultiply(requestedUnits, cwutPerUnit);
-        long fundedWorkCwut = fundDynamicCwutUpTo(requestedCwut);
-        long acquiredUnits = fundedWorkCwut / cwutPerUnit;
-        workUsedCwut = saturatingAdd(workUsedCwut, saturatingMultiply(acquiredUnits, cwutPerUnit));
-        if (acquiredUnits == maximumUnits) {
-            removeRecoveryWaiter(node);
-        }
-        long recoveryUnits = acquireRecoveryUnit(node, maximumUnits - acquiredUnits, cwutPerUnit);
-        long totalAcquiredUnits = saturatingAdd(acquiredUnits, recoveryUnits);
-        if (totalAcquiredUnits < maximumUnits) {
-            throttledOperations = saturatingAdd(throttledOperations, 1);
-        }
-        return totalAcquiredUnits;
+        GridComputeService authority = authority();
+        authority.craftingReservations.finishAdmission(reservationId);
+        authority.refreshCraftingReservations();
     }
 
     @Override
-    public void chargeSynchronousDebt(IGridNode node, long cwu) {
-        GridComputeService authority = overlayAuthority;
-        if (authority != this) {
-            authority.chargeSynchronousDebt(node, cwu);
-            return;
-        }
-        beginServerTick(currentServerTick());
-        if (cwu <= 0 || !belongsToOverlay(node)) {
-            return;
-        }
-        long immediatelyFunded = acquireFundedCwutUpTo(cwu);
-        workUsedCwut = saturatingAdd(workUsedCwut, immediatelyFunded);
-        long unfunded = cwu - immediatelyFunded;
-        long admittedDebtCwu = Math.min(unfunded, Math.max(0, debtLimit() - aggregateDebtCwu()));
-        GridComputeService debtor = memberFor(node);
-        if (debtor != null) {
-            debtor.localDebtCwu = saturatingAdd(debtor.localDebtCwu, admittedDebtCwu);
-        }
-        debtCwu = aggregateDebtCwu();
+    public boolean canDispatchCrafting() {
+        GridComputeService authority = authority();
+        authority.refreshState();
+        return authority.fundedCwut >= authority.totalReservedCwut();
+    }
+
+    @Override
+    public boolean canAdmitCrafting() {
+        return snapshot().availableCraftingCwut() >= CraftingComputeTuning.executionReservationCwut(0, 0);
     }
 
     @Override
     public ComputeSnapshot snapshot() {
-        GridComputeService authority = overlayAuthority;
-        if (authority != this) {
-            return authority.snapshot();
-        }
-        beginServerTick(currentServerTick());
-        return new ComputeSnapshot(
-                capacityCwut,
-                fundedCwut,
-                reservedCwut,
-                passiveShortfallCwut,
-                channelOverloadCwut,
-                workBudgetCwut,
-                workUsedCwut,
-                recentWorkAverageCwut,
-                recentWorkPeakCwut,
-                recoveryBudgetCwut,
-                recoveryUsedCwut,
-                debtCwu,
-                sourceCount,
-                trackedNodeCount(),
-                channelDeviceCount,
-                recentThrottledOperations,
-                recentRecoveryOperations);
+        GridComputeService authority = authority();
+        authority.refreshState();
+        return new ComputeSnapshot(authority.capacityCwut, authority.fundedCwut,
+                authority.infrastructureReservedCwut, authority.craftingReservations.totalCwut(),
+                authority.channelOverloadCwut, authority.channelDeviceCount);
     }
 
     @Override
@@ -236,12 +183,16 @@ public final class GridComputeService implements IComputeService, IGridServicePr
 
     @Override
     public void updateChannelOverloadReservation(long cwut) {
-        localChannelOverloadCwut = Math.max(0, cwut);
+        long value = Math.max(0, cwut);
+        if (localChannelOverloadCwut != value) {
+            localChannelOverloadCwut = value;
+            invalidateReservations();
+        }
     }
 
     @Override
     public void clearChannelOverloadReservation() {
-        localChannelOverloadCwut = 0;
+        updateChannelOverloadReservation(0);
     }
 
     private void refreshCapacity() {
@@ -265,26 +216,56 @@ public final class GridComputeService implements IComputeService, IGridServicePr
         for (ComputeSourceAllocation source : computeSources) {
             capacityCwut = saturatingAdd(capacityCwut, source.capacityCwut());
         }
-        sourceCount = computeSources.size();
     }
+
 
     private void refreshReservationsWhenNeeded() {
+        infrastructureReservedCwut = 0;
+        channelDeviceCount = 0;
+        channelOverloadCwut = 0;
         for (GridComputeService member : overlayMembers()) {
-            member.refreshLocalReservationsWhenNeeded();
+            if (member.reservationsDirty || member.ticksUntilReservationRefresh <= 0) {
+                LocalReservation local = member.calculateReservations();
+                member.localInfrastructureReservedCwut = local.infrastructureCwut();
+                member.localChannelDeviceCount = local.channelDeviceCount();
+                member.reservationsDirty = false;
+                member.ticksUntilReservationRefresh = ComputeTuning.RESERVATION_REFRESH_INTERVAL;
+            }
+            member.ticksUntilReservationRefresh--;
+            infrastructureReservedCwut = saturatingAdd(infrastructureReservedCwut, member.localInfrastructureReservedCwut);
+            channelDeviceCount = saturatingAdd(channelDeviceCount, member.localChannelDeviceCount);
+            channelOverloadCwut = saturatingAdd(channelOverloadCwut, member.localChannelOverloadCwut);
         }
-        updateTotalReservation();
+        infrastructureReservedCwut = saturatingAdd(infrastructureReservedCwut,
+                ComputeTuning.channelDeviceReservation(channelDeviceCount));
+        refreshCraftingReservations();
     }
 
-    private void refreshLocalReservationsWhenNeeded() {
-        if (!reservationsDirty && ticksUntilReservationRefresh > 0) {
-            ticksUntilReservationRefresh--;
-            return;
+    private void refreshCraftingReservations() {
+        Map<UUID, Long> attached = new HashMap<>();
+        Set<CraftingCPUCluster> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (GridComputeService member : overlayMembers()) {
+            for (IGridNode node : member.nodes) {
+                if (!(node.getOwner() instanceof CraftingBlockEntity block)) {
+                    continue;
+                }
+                CraftingCPUCluster cpu = block.getCluster();
+                if (cpu == null || cpu.isDestroyed() || !seen.add(cpu)) {
+                    continue;
+                }
+                ICraftingCpuReservation reservation = (ICraftingCpuReservation) cpu.craftingLogic;
+                var state = reservation.nebulae$getJobState();
+                if (state != null) {
+                    attached.merge(state.reservationId(), reservation.nebulae$getReservationCwut(), Math::max);
+                }
+            }
         }
-        LocalReservation reservation = calculateReservations();
-        localInfrastructureReservedCwut = reservation.infrastructureCwut();
-        localChannelDeviceCount = reservation.channelDeviceCount();
-        reservationsDirty = false;
-        ticksUntilReservationRefresh = ComputeTuning.RESERVATION_REFRESH_INTERVAL - 1;
+        for (var pending : PENDING_ADMISSIONS.entrySet()) {
+            if (belongsToOverlay(pending.getValue().node())) {
+                attached.merge(pending.getKey(), pending.getValue().cwut(), Math::max);
+            }
+        }
+        craftingReservations.replaceAttached(attached);
     }
 
     private LocalReservation calculateReservations() {
@@ -360,59 +341,10 @@ public final class GridComputeService implements IComputeService, IGridServicePr
                 ComputeTuning.INDEX_KEY_GROUP_RESERVATION);
     }
 
-    private void beginWorkCycle(long serverTick) {
-        if (workCycleStarted) {
-            recordCompletedWorkCycle();
-        } else {
-            workCycleStarted = true;
-        }
-        serviceTick = saturatingAdd(serviceTick, 1);
-        fundingServerTick = serverTick;
-        fundedCwut = 0;
-        fundedCwut = commitCwut(Math.min(capacityCwut, reservedCwut));
-        updateFundingShortfalls();
-        paidDebtThisTickCwut = 0;
-        debtFundingShortfall = false;
-        debtCwu = aggregateDebtCwu();
-        long discretionaryCwut = Math.max(0, capacityCwut - reservedCwut);
-        if (powerFundingShortfallCwut == 0) {
-            long requestedDebtCwut = Math.min(discretionaryCwut, debtCwu);
-            long debtTargetCwut = saturatingAdd(reservedCwut, requestedDebtCwut);
-            long debtFundedCwut = Math.max(0, commitCwut(debtTargetCwut) - reservedCwut);
-            paidDebtThisTickCwut = Math.min(requestedDebtCwut, debtFundedCwut);
-            repayDebt(paidDebtThisTickCwut);
-            debtCwu = aggregateDebtCwu();
-            debtFundingShortfall = paidDebtThisTickCwut < requestedDebtCwut;
-        }
-        workBudgetCwut = powerFundingShortfallCwut == 0 && !debtFundingShortfall ?
-                discretionaryCwut - paidDebtThisTickCwut : 0;
-        workUsedCwut = 0;
-        recoveryBudgetCwut = calculateRecoveryBudget();
-        recoveryUsedCwut = 0;
-        if (recoveryBudgetCwut == 0) {
-            clearRecoveryWaiters();
-        }
-        throttledOperations = 0;
-        recoveryOperations = 0;
-    }
 
-    private long acquireFundedCwutUpTo(long maximumCwut) {
-        long availableBudgetCwut = Math.max(0, workBudgetCwut - workUsedCwut - recoveryUsedCwut);
-        return fundDynamicCwutUpTo(Math.min(maximumCwut, availableBudgetCwut));
-    }
-
-    private long fundDynamicCwutUpTo(long requestedCwut) {
-        if (requestedCwut <= 0) {
-            return 0;
-        }
-        long baseDemandCwut = saturatingAdd(reservedCwut, paidDebtThisTickCwut);
-        long allocatedWorkCwut = saturatingAdd(workUsedCwut, recoveryUsedCwut);
-        long targetCwut = saturatingAdd(baseDemandCwut, allocatedWorkCwut);
-        targetCwut = saturatingAdd(targetCwut, requestedCwut);
-        commitCwut(targetCwut);
-        long fundedWorkCwut = Math.max(0, fundedCwut - Math.min(capacityCwut, baseDemandCwut));
-        long availableFundedCwut = Math.max(0, fundedWorkCwut - allocatedWorkCwut);
-        return Math.min(requestedCwut, availableFundedCwut);
+    private long totalReservedCwut() {
+        return saturatingAdd(saturatingAdd(infrastructureReservedCwut, channelOverloadCwut),
+                craftingReservations.totalCwut());
     }
 
     private long commitCwut(long targetTotalCwut) {
@@ -422,10 +354,7 @@ public final class GridComputeService implements IComputeService, IGridServicePr
             long sourceTargetCwut = saturatingAdd(allocation.committedCwut(), remainingCwut);
             sourceTargetCwut = Math.min(allocation.capacityCwut(), sourceTargetCwut);
             if (containsNode(allocation.node()) && allocation.node().meetsChannelRequirements()) {
-                long committedCwut = allocation.source().commitCwut(
-                        overlayLeaseId,
-                        fundingServerTick,
-                        sourceTargetCwut);
+                long committedCwut = allocation.source().commitCwut(overlayLeaseId, fundingServerTick, sourceTargetCwut);
                 committedCwut = Math.clamp(committedCwut, allocation.committedCwut(), sourceTargetCwut);
                 long newlyCommittedCwut = committedCwut - allocation.committedCwut();
                 allocation.setCommittedCwut(committedCwut);
@@ -433,153 +362,16 @@ public final class GridComputeService implements IComputeService, IGridServicePr
                 remainingCwut -= newlyCommittedCwut;
             }
         }
-        updateFundingShortfalls();
         return fundedCwut;
     }
 
-    private void updateFundingShortfalls() {
-        long powerFundingTargetCwut = Math.min(capacityCwut, reservedCwut);
-        powerFundingShortfallCwut = Math.max(0, powerFundingTargetCwut - fundedCwut);
-        passiveShortfallCwut = Math.max(0, reservedCwut - fundedCwut);
-    }
-
     private long currentServerTick() {
-        if (computeSources.isEmpty()) {
-            for (GridComputeService member : overlayMembers()) {
-                for (IGridNode node : member.nodes) {
-                    return node.getLevel().getServer().getTickCount();
-                }
-            }
-            return serviceTick;
-        }
-        return computeSources.getFirst().node().getLevel().getServer().getTickCount();
-    }
-
-    private void recordCompletedWorkCycle() {
-        long dynamicWorkCwut = saturatingAdd(workUsedCwut, recoveryUsedCwut);
-        if (telemetrySampleCount == ComputeTuning.TELEMETRY_WINDOW_TICKS) {
-            telemetryWorkCwu -= telemetryWorkSamples[telemetryCursor];
-            telemetryThrottledOperations -= telemetryThrottleSamples[telemetryCursor];
-            telemetryRecoveryOperations -= telemetryRecoverySamples[telemetryCursor];
-        } else {
-            telemetrySampleCount++;
-        }
-
-        telemetryWorkSamples[telemetryCursor] = dynamicWorkCwut;
-        telemetryThrottleSamples[telemetryCursor] = throttledOperations;
-        telemetryRecoverySamples[telemetryCursor] = recoveryOperations;
-        telemetryWorkCwu = saturatingAdd(telemetryWorkCwu, dynamicWorkCwut);
-        telemetryThrottledOperations = saturatingAdd(telemetryThrottledOperations, throttledOperations);
-        telemetryRecoveryOperations = saturatingAdd(telemetryRecoveryOperations, recoveryOperations);
-        telemetryCursor++;
-        if (telemetryCursor == ComputeTuning.TELEMETRY_WINDOW_TICKS) {
-            telemetryCursor = 0;
-        }
-
-        recentWorkAverageCwut = (double) telemetryWorkCwu / telemetrySampleCount;
-        recentWorkPeakCwut = 0;
-        for (long sample : telemetryWorkSamples) {
-            recentWorkPeakCwut = Math.max(recentWorkPeakCwut, sample);
-        }
-        recentThrottledOperations = telemetryThrottledOperations;
-        recentRecoveryOperations = telemetryRecoveryOperations;
-    }
-
-    private long acquireRecoveryUnit(IGridNode node, long requestedUnits, long cwutPerUnit) {
-        if (requestedUnits <= 0 || recoveryBudgetCwut <= 0) {
-            return 0;
-        }
-        long eligibleTick = recoveryEligibleTicks.getOrDefault(node, 0L);
-        if (eligibleTick > serviceTick || cwutPerUnit > recoveryBudgetCwut) {
-            return 0;
-        }
-
-        enqueueRecoveryWaiter(node);
-        pruneStaleRecoveryWaiters();
-        if (recoveryWaiters.peekFirst() != node) {
-            return 0;
-        }
-        if (recoveryBudgetCwut <= recoveryUsedCwut) {
-            return 0;
-        }
-
-        long recoveryAvailableCwut = Math.min(
-                recoveryBudgetCwut - recoveryUsedCwut,
-                Math.max(0, fundedCwut - recoveryUsedCwut));
-        if (cwutPerUnit > recoveryAvailableCwut) {
-            return 0;
-        }
-        recoveryWaiters.removeFirst();
-        recoveryWaiterSet.remove(node);
-        recoveryLastRequestTicks.remove(node);
-        recoveryUsedCwut = saturatingAdd(recoveryUsedCwut, cwutPerUnit);
-        recoveryOperations = saturatingAdd(recoveryOperations, 1);
-        recoveryEligibleTicks.put(node, saturatingAdd(serviceTick, ComputeTuning.RECOVERY_NODE_COOLDOWN_TICKS));
-        return 1;
-    }
-
-    private void enqueueRecoveryWaiter(IGridNode node) {
-        recoveryLastRequestTicks.put(node, serviceTick);
-        if (recoveryWaiterSet.add(node)) {
-            recoveryWaiters.addLast(node);
-        }
-    }
-
-    private void pruneStaleRecoveryWaiters() {
-        while (!recoveryWaiters.isEmpty()) {
-            IGridNode waiter = recoveryWaiters.peekFirst();
-            long lastRequestTick = recoveryLastRequestTicks.getOrDefault(waiter, Long.MIN_VALUE);
-            boolean expired = lastRequestTick == Long.MIN_VALUE
-                    || serviceTick - lastRequestTick > ComputeTuning.RECOVERY_WAITER_EXPIRY_TICKS;
-            if (containsNode(waiter) && !expired) {
-                return;
-            }
-            recoveryWaiters.removeFirst();
-            recoveryWaiterSet.remove(waiter);
-            recoveryLastRequestTicks.remove(waiter);
-        }
-    }
-
-    private void removeRecoveryWaiter(IGridNode node) {
-        if (recoveryWaiterSet.remove(node)) {
-            recoveryWaiters.removeIf(waiter -> waiter == node);
-        }
-        recoveryLastRequestTicks.remove(node);
-    }
-
-    private void clearRecoveryWaiters() {
-        recoveryWaiters.clear();
-        recoveryWaiterSet.clear();
-        recoveryLastRequestTicks.clear();
-        recoveryEligibleTicks.clear();
-    }
-
-    private long calculateRecoveryBudget() {
-        if (debtFundingShortfall || fundedCwut < ComputeTuning.BASE_CWU_COST) {
-            return 0;
-        }
-        long scaledCwut = fundedCwut / ComputeTuning.RECOVERY_CAPACITY_DIVISOR;
-        long roundedCwut = scaledCwut / ComputeTuning.BASE_CWU_COST * ComputeTuning.BASE_CWU_COST;
-        long fundedWholeUnitsCwut = fundedCwut / ComputeTuning.BASE_CWU_COST * ComputeTuning.BASE_CWU_COST;
-        return Math.min(fundedWholeUnitsCwut, Math.max(ComputeTuning.BASE_CWU_COST, roundedCwut));
-    }
-
-    private void updateTotalReservation() {
-        infrastructureReservedCwut = 0;
-        channelDeviceCount = 0;
-        channelOverloadCwut = 0;
         for (GridComputeService member : overlayMembers()) {
-            infrastructureReservedCwut = saturatingAdd(
-                    infrastructureReservedCwut,
-                    member.localInfrastructureReservedCwut);
-            channelDeviceCount = saturatingAdd(channelDeviceCount, member.localChannelDeviceCount);
-            channelOverloadCwut = saturatingAdd(channelOverloadCwut, member.localChannelOverloadCwut);
+            for (IGridNode node : member.nodes) {
+                return node.getLevel().getServer().getTickCount();
+            }
         }
-        infrastructureReservedCwut = saturatingAdd(
-                infrastructureReservedCwut,
-                ComputeTuning.channelDeviceReservation(channelDeviceCount));
-        reservedCwut = saturatingAdd(infrastructureReservedCwut, channelOverloadCwut);
-        updateFundingShortfalls();
+        return 0;
     }
 
     private boolean belongsToOverlay(IGridNode node) {
@@ -603,51 +395,6 @@ public final class GridComputeService implements IComputeService, IGridServicePr
             }
         }
         return false;
-    }
-
-    private GridComputeService memberFor(IGridNode node) {
-        try {
-            IGrid nodeGrid = node.getGrid();
-            for (GridComputeService member : overlayMembers()) {
-                if (member.grid == nodeGrid) {
-                    return member;
-                }
-            }
-        } catch (IllegalStateException ignored) {
-            return null;
-        }
-        return null;
-    }
-
-    private long aggregateDebtCwu() {
-        long aggregate = 0;
-        for (GridComputeService member : overlayMembers()) {
-            aggregate = saturatingAdd(aggregate, member.localDebtCwu);
-        }
-        return aggregate;
-    }
-
-    private void repayDebt(long paymentCwu) {
-        List<GridComputeService> members = overlayMembers();
-        if (paymentCwu <= 0 || members.isEmpty()) {
-            return;
-        }
-        int start = Math.floorMod(serviceTick, members.size());
-        long remainingCwu = paymentCwu;
-        for (int offset = 0; offset < members.size() && remainingCwu > 0; offset++) {
-            GridComputeService member = members.get((start + offset) % members.size());
-            long repaidCwu = Math.min(member.localDebtCwu, remainingCwu);
-            member.localDebtCwu -= repaidCwu;
-            remainingCwu -= repaidCwu;
-        }
-    }
-
-    private int trackedNodeCount() {
-        long count = 0;
-        for (GridComputeService member : overlayMembers()) {
-            count = Math.min(Integer.MAX_VALUE, count + member.nodes.size());
-        }
-        return (int) count;
     }
 
     private List<GridComputeService> overlayMembers() {
@@ -687,9 +434,10 @@ public final class GridComputeService implements IComputeService, IGridServicePr
         authority.resetOverlayState();
     }
 
+
     private void retireOverlayState() {
         computeSources.clear();
-        clearRecoveryWaiters();
+        craftingReservations.replaceAttached(Map.of());
     }
 
     private void resetOverlayState() {
@@ -698,42 +446,11 @@ public final class GridComputeService implements IComputeService, IGridServicePr
         fundedCwut = 0;
         infrastructureReservedCwut = 0;
         channelDeviceCount = 0;
-        reservedCwut = 0;
-        passiveShortfallCwut = 0;
-        powerFundingShortfallCwut = 0;
         channelOverloadCwut = 0;
-        workBudgetCwut = 0;
-        workUsedCwut = 0;
-        recoveryBudgetCwut = 0;
-        recoveryUsedCwut = 0;
-        debtCwu = aggregateDebtCwu();
-        paidDebtThisTickCwut = 0;
-        throttledOperations = 0;
-        recoveryOperations = 0;
-        recentWorkAverageCwut = 0;
-        recentWorkPeakCwut = 0;
-        recentThrottledOperations = 0;
-        recentRecoveryOperations = 0;
-        telemetryWorkCwu = 0;
-        telemetryThrottledOperations = 0;
-        telemetryRecoveryOperations = 0;
-        telemetryCursor = 0;
-        telemetrySampleCount = 0;
         fundingServerTick = 0;
-        sourceCount = 0;
         cycleServerTick = Long.MIN_VALUE;
-        workCycleStarted = false;
-        debtFundingShortfall = false;
         computeSources.clear();
-        clearRecoveryWaiters();
-        Arrays.fill(telemetryWorkSamples, 0);
-        Arrays.fill(telemetryThrottleSamples, 0);
-        Arrays.fill(telemetryRecoverySamples, 0);
-    }
-
-    private long debtLimit() {
-        long scaledLimit = saturatingMultiply(Math.max(1, capacityCwut), ComputeTuning.MAX_DEBT_TICKS);
-        return Math.max(ComputeTuning.MINIMUM_DEBT_LIMIT, scaledLimit);
+        craftingReservations.replaceAttached(Map.of());
     }
 
     private static long saturatingAdd(long left, long right) {
@@ -758,6 +475,8 @@ public final class GridComputeService implements IComputeService, IGridServicePr
     }
 
     private record LocalReservation(long infrastructureCwut, long channelDeviceCount) {}
+
+    private record PendingAdmission(IGridNode node, long cwut, GridComputeService owner) {}
 
     private static final class ComputeSourceAllocation {
 

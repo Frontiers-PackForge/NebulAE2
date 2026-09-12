@@ -15,8 +15,8 @@ guideme = "21.1.16"
 ae2wtlib = "19.5.0"
 clothconfig = "15.0.140"
 
-sodium = "mc1.21.1-0.6.13-neoforge"
-iris = "1.8.12+1.21.1-neoforge"
+sodium = "0.8.12-beta.1+mc1.21.1"
+iris = "8242804"
 
 [libraries]
 ldlib               = { module = "com.lowdragmc.ldlib:ldlib-neoforge-1.21.1", version.ref = "ldlib" }
@@ -37,8 +37,10 @@ ae2wtlib            = { module = "de.mari_023:ae2wtlib", version.ref = "ae2wtlib
 ae2wtlib-api        = { module = "de.mari_023:ae2wtlib_api", version.ref = "ae2wtlib" }
 clothconfig         = { module = "me.shedaniel.cloth:cloth-config-neoforge", version.ref = "clothconfig" }
 
-sodium              = { module = "maven.modrinth:sodium", version.ref = "sodium" }
-iris                = { module = "maven.modrinth:iris", version.ref = "iris" }
+sodium              = { module = "net.caffeinemc:sodium-neoforge-mod", version.ref = "sodium" }
+sodiumapi           = { module = "net.caffeinemc:sodium-neoforge-api", version.ref = "sodium" }
+sodiumshell         = { module = "net.caffeinemc:sodium-neoforge", version.ref = "sodium" }
+iris                = { module = "curse.maven:irisshaders-455508", version.ref = "iris" }
 
 [bundles]
 jei = ["jei-common-api", "jei-neoforge-api", "jei-neoforge-impl"]

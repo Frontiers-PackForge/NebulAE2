@@ -1,5 +1,17 @@
 repositories {
     mavenLocal()
+    exclusiveContent {
+        forRepository { maven { url = 'https://maven.caffeinemc.net/releases' } }
+        filter { includeGroup('net.caffeinemc') }
+    }
+    exclusiveContent {
+        forRepository { maven { url = 'https://maven.sinytra.org/' } }
+        filter { includeGroupAndSubgroups('org.sinytra') }
+    }
+    exclusiveContent {
+        forRepository { maven { url = 'https://maven.fabricmc.net/' } }
+        filter { includeGroup('net.fabricmc') }
+    }
     mavenCentral()
     maven { url = 'https://maven.neoforged.net/releases' }
 

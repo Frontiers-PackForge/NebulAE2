@@ -38,17 +38,6 @@ public abstract class NetworkStatusMixin implements NetworkStatusComputeExtensio
                 data.readLong(),
                 data.readLong(),
                 data.readLong(),
-                data.readLong(),
-                data.readLong(),
-                data.readDouble(),
-                data.readLong(),
-                data.readLong(),
-                data.readLong(),
-                data.readLong(),
-                data.readVarInt(),
-                data.readVarInt(),
-                data.readLong(),
-                data.readLong(),
                 data.readLong());
         var extension = (NetworkStatusComputeExtension) (Object) callback.getReturnValue();
         extension.nebulae$setComputeSnapshot(snapshot);
@@ -58,21 +47,10 @@ public abstract class NetworkStatusMixin implements NetworkStatusComputeExtensio
     private void nebulae$writeComputeSnapshot(RegistryFriendlyByteBuf data, CallbackInfo callback) {
         data.writeLong(nebulae$computeSnapshot.capacityCwut());
         data.writeLong(nebulae$computeSnapshot.fundedCwut());
-        data.writeLong(nebulae$computeSnapshot.reservedCwut());
-        data.writeLong(nebulae$computeSnapshot.passiveShortfallCwut());
+        data.writeLong(nebulae$computeSnapshot.infrastructureReservedCwut());
+        data.writeLong(nebulae$computeSnapshot.craftingReservedCwut());
         data.writeLong(nebulae$computeSnapshot.channelOverloadCwut());
-        data.writeLong(nebulae$computeSnapshot.workBudgetCwut());
-        data.writeLong(nebulae$computeSnapshot.workUsedCwut());
-        data.writeDouble(nebulae$computeSnapshot.recentWorkAverageCwut());
-        data.writeLong(nebulae$computeSnapshot.recentWorkPeakCwut());
-        data.writeLong(nebulae$computeSnapshot.recoveryBudgetCwut());
-        data.writeLong(nebulae$computeSnapshot.recoveryUsedCwut());
-        data.writeLong(nebulae$computeSnapshot.debtCwu());
-        data.writeVarInt(nebulae$computeSnapshot.sourceCount());
-        data.writeVarInt(nebulae$computeSnapshot.trackedNodeCount());
         data.writeLong(nebulae$computeSnapshot.channelDeviceCount());
-        data.writeLong(nebulae$computeSnapshot.recentThrottledOperations());
-        data.writeLong(nebulae$computeSnapshot.recentRecoveryOperations());
     }
 
     @Override

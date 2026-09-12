@@ -1,0 +1,10 @@
+{
+  "widgets": {
+    "nebulaeCompute": {
+      "left": 8,
+      "bottom": 25,
+      "width": 16,
+      "height": 20
+    }
+  }
+}

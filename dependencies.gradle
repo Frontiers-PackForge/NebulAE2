@@ -21,6 +21,15 @@ dependencies {
     implementation(forge.jade)
 
     compileOnly(forge.sodium)
+    compileOnly(forge.sodiumapi)
+    compileOnly("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.1+9125b6dc19")
+    sodiumShell(forge.sodiumshell)
     runtimeOnly(forge.sodium)
+    runtimeOnly(files(tasks.named('stripSodiumShell')))
+    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
+    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.1+9125b6dc19")
+    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
+    runtimeOnly("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
+    compileOnly(forge.iris)
     runtimeOnly(forge.iris)
 }

@@ -3,20 +3,17 @@ package com.ghostipedia.nebulaeae2.compute.api;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IGridService;
 
+import java.util.UUID;
+
 public interface IComputeService extends IGridService {
 
-    long acquireUpTo(IGridNode node, long maximumCwut);
+    boolean tryReserveCrafting(IGridNode node, UUID reservationId, long cwut);
 
-    long acquireWholeUnitsUpTo(IGridNode node, long maximumUnits, long cwutPerUnit);
+    void finishCraftingAdmission(UUID reservationId);
 
-    default boolean tryAcquire(IGridNode node, long cwut) {
-        if (cwut == 0) {
-            return true;
-        }
-        return acquireWholeUnitsUpTo(node, 1, cwut) == 1;
-    }
+    boolean canDispatchCrafting();
 
-    void chargeSynchronousDebt(IGridNode node, long cwu);
+    boolean canAdmitCrafting();
 
     ComputeSnapshot snapshot();
 

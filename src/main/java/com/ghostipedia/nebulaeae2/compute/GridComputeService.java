@@ -7,6 +7,7 @@ import com.ghostipedia.nebulaeae2.crafting.CraftingReservationLedger;
 import com.ghostipedia.nebulaeae2.crafting.CraftingComputeTuning;
 import com.ghostipedia.nebulaeae2.crafting.api.ICraftingCpuReservation;
 import com.ghostipedia.nebulaeae2.mixin.ae2.compute.EnergyServiceAccessor;
+import com.gregtechceu.gtceu.integration.ae2.machine.MEPatternBufferPartMachine;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
@@ -298,7 +299,11 @@ public final class GridComputeService implements IComputeService, IGridServicePr
         if (node.getService(IStorageProvider.class) != null) {
             reservation = saturatingAdd(reservation, ComputeTuning.STORAGE_PROVIDER_RESERVATION);
         }
-        if (node.getService(ICraftingProvider.class) != null) {
+        if (node.getOwner() instanceof MEPatternBufferPartMachine patternBuffer) {
+            reservation = saturatingAdd(
+                    reservation,
+                    ComputeTuning.patternBufferReservation(patternBuffer.getProxies().size()));
+        } else if (node.getService(ICraftingProvider.class) != null) {
             reservation = saturatingAdd(reservation, ComputeTuning.CRAFTING_PROVIDER_RESERVATION);
         }
         if (node.getOwner() instanceof InterfaceLogicHost interfaceHost) {

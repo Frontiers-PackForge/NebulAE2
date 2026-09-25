@@ -7,6 +7,7 @@ public final class ComputeTuning {
     public static final long CHANNEL_DEVICE_SCALE_GROUP = 64;
     public static final long STORAGE_PROVIDER_RESERVATION = BASE_CWU_COST;
     public static final long CRAFTING_PROVIDER_RESERVATION = BASE_CWU_COST;
+    public static final long PATTERN_BUFFER_RESERVATION = 50;
     public static final long WIRELESS_BOOSTER_RESERVATION = 25;
     public static final long INTERFACE_STOCKING_SLOTS_PER_GROUP = 3;
     public static final long INTERFACE_STOCKING_GROUP_RESERVATION = BASE_CWU_COST;
@@ -34,6 +35,10 @@ public final class ComputeTuning {
     public static long channelDeviceScaleReservation(long deviceCount) {
         long baseReservation = saturatingMultiply(Math.max(0, deviceCount), CHANNEL_DEVICE_RESERVATION);
         return Math.max(0, channelDeviceReservation(deviceCount) - baseReservation);
+    }
+
+    public static long patternBufferReservation(long proxyCount) {
+        return saturatingMultiply(PATTERN_BUFFER_RESERVATION, saturatingAdd(1, Math.max(0, proxyCount)));
     }
 
     private static long saturatingAdd(long left, long right) {

@@ -51,6 +51,7 @@
     "ae2.client.render.cablebus.CableBusBakedModelStraightChannelsMixin",
     "ae2.client.render.cablebus.CableBuilderOverloadColorMixin",
     "ae2.client.gui.InitScreensMixin",
+    "ae2.client.gui.me.MEStorageScreenFluidAutocraftMixin",
     "ae2.client.gui.networktool.NetworkStatusScreenMixin",
     "ae2.client.gui.crafting.CPUSelectionListTelemetryMixin",
     "ae2.client.gui.crafting.CraftAmountScreenFollowMixin",

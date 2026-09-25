@@ -15,10 +15,9 @@ Report Issues to the main Cosmic Frontiers Repo : https://github.com/Frontiers-P
 No. Nebulae's goal is to be an inhouse coremod specifically driven for modifying AE2, if you wish to uplift/port/use any features, feel free, the code is LGPL3/MIT.
 ### There's a lot of content from other addons, why?
 Simply put, many of the GT related forks of AE2 or past forks of AE2 tend to have many similar overlaps, credit has been given below for inspiration.
-### Why so many Mixins?
-Just the nature of a mod like this, while a fork could be seen as an optional choice, I do not wish to take the burden of front facing support
-### Will you offer support for external use?
-No, under no circumstances, if someone is found using this outside of Cosmic Frontiers, no one is obligated to offer them support.
+### Why not fork AE2?
+I could have, but the nature of these modifications require interlinking with other projects, and I do not wish to maintain a generalized public version of an AE2 Fork with custom behaviors.
+If you are looking for a fork of AE2 with more features, please use [Kolja's AE2 Fork, AE2-UELM](https://www.curseforge.com/minecraft/mc-mods/ae2-uelm)
 
 
 ## Contact 

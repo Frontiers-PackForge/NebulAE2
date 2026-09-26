@@ -72,6 +72,7 @@
   "gui.nebulaeae2.stock.roles": "Planned withdrawal: %s; missing stock: %s. Crafting outputs excluded.",
   "gui.nebulaeae2.stock.unavailable": "Initial stock snapshot unavailable for this job.",
   "item.nebulaeae2.pattern_p2p_tunnel": "Pattern Provider P2P Tunnel",
+  "item.nebulaeae2.sticky_card": "Sticky Card",
   "tooltip.nebulaeae2.cable.channel_devices": "Total Connected Devices: %s",
   "tooltip.nebulaeae2.cable.channel_overhead": "Channel Overload Tax: %s CWU/t (Included in Global CWU)",
   "tooltip.nebulaeae2.cable.device_scale": "Device Scale Cost: %s CWU/t",
@@ -102,5 +103,10 @@
   "tooltip.nebulaeae2.controller.passive_shortfall": "Compute Shortfall: %s CWU/t",
   "tooltip.nebulaeae2.pattern_author": "Encoded by: %s",
   "tooltip.nebulaeae2.pattern_p2p.join_input": "Extra inputs may be assigned by holding a attuned memory card in your offhand",
-  "tooltip.nebulaeae2.pattern_p2p.processing": "Round Robin your pattern providers!"
+  "tooltip.nebulaeae2.pattern_p2p.processing": "Round Robin your pattern providers!",
+  "tooltip.nebulaeae2.sticky.cells": "Storage Cells",
+  "tooltip.nebulaeae2.sticky.description": "Forces filtered items/fluids to only enter this drive or storage bus.",
+  "tooltip.nebulaeae2.sticky.enabled": "Sticky storage: matching resources will only enter this device.",
+  "tooltip.nebulaeae2.sticky.invalid": "Invalid Sticky configuration: requires a filter to function!",
+  "tooltip.nebulaeae2.sticky.partition_required": "Requires a filtered storage cell or bus"
 }

@@ -15,6 +15,12 @@ public final class NebulaeLanguageProvider extends RegistrateLangProvider {
         add("item.nebulaeae2.pattern_p2p_tunnel", "Pattern Provider P2P Tunnel");
         add("tooltip.nebulaeae2.pattern_p2p.processing", "Round Robin your pattern providers!");
         add("tooltip.nebulaeae2.pattern_p2p.join_input", "Extra inputs may be assigned by holding a attuned memory card in your offhand");
+        add("item.nebulaeae2.sticky_card", "Sticky Card");
+        add("tooltip.nebulaeae2.sticky.cells", "Storage Cells");
+        add("tooltip.nebulaeae2.sticky.description", "Forces filtered items/fluids to only enter this drive or storage bus.");
+        add("tooltip.nebulaeae2.sticky.partition_required", "Requires a filtered storage cell or bus");
+        add("tooltip.nebulaeae2.sticky.enabled", "Sticky storage: matching resources will only enter this device.");
+        add("tooltip.nebulaeae2.sticky.invalid", "Invalid Sticky configuration: requires a filter to function!");
         add("config.jade.plugin_nebulaeae2.controller_compute", "Nebulae Controller Compute");
         add("gui.nebulaeae2.controller_compute.title", "Network Computation Overview");
         add("gui.nebulaeae2.controller_compute.shortfall", "Shortfall: %s CWU/t");

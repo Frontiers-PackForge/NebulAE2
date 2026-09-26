@@ -1,19 +1,12 @@
 package com.ghostipedia.nebulaeae2.data;
 
-import com.ghostipedia.nebulaeae2.NebulaeAE2;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.data.event.GatherDataEvent;
+import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
+import com.tterrag.registrate.providers.ProviderType;
 
-@EventBusSubscriber(modid = NebulaeAE2.MODID, bus = EventBusSubscriber.Bus.MOD)
 public final class NebulaeDataGenerators {
     private NebulaeDataGenerators() {}
 
-    @SubscribeEvent
-    public static void gatherData(GatherDataEvent event) {
-        if (event.includeClient() && event.getMods().contains(NebulaeAE2.MODID)) {
-            event.getGenerator().addProvider(true,
-                    new NebulaeLanguageProvider(event.getGenerator().getPackOutput()));
-        }
+    public static void init(GTRegistrate registrate) {
+        registrate.addDataGenerator(ProviderType.LANG, NebulaeLanguageProvider::addTranslations);
     }
 }

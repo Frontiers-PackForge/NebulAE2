@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public final class ActivityArchive extends SavedData {
     public static final int PAGE_SIZE = 6;
     private final Map<UUID, Segment> segments = new HashMap<>();
     private final Map<UUID, CompoundTag> jobs = new HashMap<>();
+    private final ActivityHistoryIndex history = new ActivityHistoryIndex();
     private long clock;
     private long previousNanos;
     private long fractionalNanos;
@@ -57,6 +59,28 @@ public final class ActivityArchive extends SavedData {
 
     public long clock() {
         return clock;
+    }
+
+    UUID branchHistory(UUID previous) {
+        var id = history.branch(previous);
+        ensureSegment(id);
+        return id;
+    }
+
+    UUID importHistory(Set<UUID> legacy) {
+        var id = history.importLegacy(legacy);
+        if (id != null) setDirty();
+        return id;
+    }
+
+    UUID mergeHistory(UUID current, UUID incoming) {
+        var id = history.merge(current, incoming);
+        if (!Objects.equals(id, current)) setDirty();
+        return id;
+    }
+
+    Set<UUID> historySegments(UUID head) {
+        return history.resolve(head);
     }
 
     public void ensureSegment(UUID id) {
@@ -289,6 +313,7 @@ public final class ActivityArchive extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         tag.putLong("clock", clock);
+        tag.put("historyIndex", history.save());
         var history = new ListTag();
         jobs.values().forEach(job -> history.add(job.copy()));
         tag.put("jobs", history);
@@ -325,6 +350,7 @@ public final class ActivityArchive extends SavedData {
     static ActivityArchive load(CompoundTag tag, HolderLookup.Provider registries) {
         var archive = new ActivityArchive();
         archive.clock = Math.max(0, tag.getLong("clock"));
+        archive.history.load(tag.getList("historyIndex", Tag.TAG_COMPOUND));
         for (var raw : tag.getList("jobs", Tag.TAG_COMPOUND)) {
             var job = (CompoundTag) raw;
             if (job.hasUUID("id") && job.hasUUID("segment")) archive.jobs.put(job.getUUID("id"), job.copy());

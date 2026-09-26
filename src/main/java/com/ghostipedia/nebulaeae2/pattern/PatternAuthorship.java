@@ -1,6 +1,7 @@
 package com.ghostipedia.nebulaeae2.pattern;
 
 import com.ghostipedia.nebulaeae2.NebulaeAE2;
+import com.ghostipedia.nebulaeae2.optimizer.PatternOptimization;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.ItemStack;
@@ -23,16 +24,18 @@ public final class PatternAuthorship {
     }
 
     public static ItemStack contentCopy(ItemStack original) {
-        if (!original.has(AUTHOR)) {
+        PatternOptimization.provenance(original);
+        if (!original.has(AUTHOR) && !original.has(PatternOptimization.PROVENANCE)) {
             return original;
         }
         ItemStack copy = original.copy();
         copy.remove(AUTHOR);
+        copy.remove(PatternOptimization.PROVENANCE);
         return copy;
     }
 
     public static AEItemKey contentKey(AEItemKey original) {
-        if (original == null || original.get(AUTHOR) == null) {
+        if (original == null || original.get(AUTHOR) == null && original.get(PatternOptimization.PROVENANCE) == null) {
             return original;
         }
         return AEItemKey.of(contentCopy(original.toStack()));

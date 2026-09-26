@@ -1,6 +1,7 @@
 package com.ghostipedia.nebulaeae2.data;
 
 import com.ghostipedia.nebulaeae2.NebulaeAE2;
+import com.ghostipedia.nebulaeae2.optimizer.OptimizerTranslations;
 import com.tterrag.registrate.Registrate;
 import com.tterrag.registrate.providers.RegistrateLangProvider;
 import net.minecraft.data.PackOutput;
@@ -12,6 +13,7 @@ public final class NebulaeLanguageProvider extends RegistrateLangProvider {
 
     @Override
     protected void addTranslations() {
+        OptimizerTranslations.add(this::add);
         add("item.nebulaeae2.pattern_p2p_tunnel", "Pattern Provider P2P Tunnel");
         add("tooltip.nebulaeae2.pattern_p2p.processing", "Round Robin your pattern providers!");
         add("tooltip.nebulaeae2.pattern_p2p.join_input", "Extra inputs may be assigned by holding a attuned memory card in your offhand");

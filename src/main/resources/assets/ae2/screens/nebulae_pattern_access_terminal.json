@@ -1,0 +1,6 @@
+{
+  "includes": ["terminals/pattern_access_terminal.json"],
+  "widgets": {
+    "nebulaeOptimize": {"right": 30, "top": -20, "width": 22, "height": 22}
+  }
+}

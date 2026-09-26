@@ -4,6 +4,14 @@
   "package": "com.ghostipedia.nebulaeae2.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ae2.patternprovider.PatternProviderLogicOptimizerMixin",
+    "ae2.crafting.optimizer.ProcessingPatternOptimizationMixin",
+    "minecraft.menu.OptimizerMenuRemovalMixin",
+    "ae2.crafting.optimizer.CraftingServiceOptimizerMixin",
+    "ae2.menu.optimizer.CraftConfirmOptimizerAccessor",
+    "ae2.menu.optimizer.OptimizerMenuMixin",
+    "ae2.menu.optimizer.PatternProviderMenuOptimizerMixin",
+    "gtceu.optimizer.MEPatternBufferOptimizerMixin",
     "ae2.patternprovider.p2p.PatternProviderLogicP2PMixin",
     "ae2.patternprovider.p2p.RemotePatternTargetBlockingMixin",
     "ae2.storage.sticky.BasicCellStickyMixin",
@@ -60,6 +68,9 @@
     "ae2.menu.crafting.CraftingCPUMenuStockMixin"
   ],
   "client": [
+    "ae2.client.gui.optimizer.OptimizerStyleMixin",
+    "ae2.client.gui.optimizer.OptimizerTerminalPacketMixin",
+    "ae2.client.gui.optimizer.OptimizerScreenMixin",
     "ae2.client.render.cablebus.CableBusBakedModelStraightChannelsMixin",
     "ae2.client.render.cablebus.CableBuilderOverloadColorMixin",
     "ae2.client.gui.InitScreensMixin",

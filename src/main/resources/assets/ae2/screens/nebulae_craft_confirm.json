@@ -3,6 +3,12 @@
     "craft_confirm.json"
   ],
   "widgets": {
+    "nebulaeOptimize": {
+      "right": 24,
+      "top": -5,
+      "width": 20,
+      "height": 20
+    },
     "nebulaeStartFollow": {
       "left": 62,
       "bottom": 25,

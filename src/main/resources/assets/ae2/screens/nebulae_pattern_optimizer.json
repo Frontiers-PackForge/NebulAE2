@@ -1,0 +1,31 @@
+{
+  "includes": ["common/common.json"],
+  "generatedBackground": {
+    "width": 280,
+    "height": 226
+  },
+  "text": {
+    "dialog_title": {
+      "position": {"left": 8, "top": 8}
+    }
+  },
+  "widgets": {
+    "select0": {"left": 8, "top": 32, "width": 17, "height": 17},
+    "details0": {"left": 212, "top": 24, "width": 60, "height": 16},
+    "protect0": {"left": 230, "top": 42, "width": 42, "height": 14},
+    "select1": {"left": 8, "top": 67, "width": 17, "height": 17},
+    "details1": {"left": 212, "top": 59, "width": 60, "height": 16},
+    "protect1": {"left": 230, "top": 77, "width": 42, "height": 14},
+    "select2": {"left": 8, "top": 102, "width": 17, "height": 17},
+    "details2": {"left": 212, "top": 94, "width": 60, "height": 16},
+    "protect2": {"left": 230, "top": 112, "width": 42, "height": 14},
+    "previous": {"left": 8, "top": 132, "width": 20, "height": 16},
+    "next": {"left": 252, "top": 132, "width": 20, "height": 16},
+    "factor": {"left": 8, "top": 159, "width": 80, "height": 12},
+    "operation": {"left": 100, "top": 156, "width": 82, "height": 18},
+    "preview": {"left": 190, "top": 156, "width": 82, "height": 18},
+    "back": {"left": 8, "top": 204, "width": 66, "height": 16},
+    "refresh": {"left": 82, "top": 204, "width": 84, "height": 16},
+    "apply": {"left": 184, "top": 204, "width": 88, "height": 16}
+  }
+}

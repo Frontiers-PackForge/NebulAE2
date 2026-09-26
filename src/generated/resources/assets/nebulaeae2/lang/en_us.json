@@ -71,6 +71,7 @@
   "gui.nebulaeae2.stock.refresh": "Availability is refreshed every second for this plan.",
   "gui.nebulaeae2.stock.roles": "Planned withdrawal: %s; missing stock: %s. Crafting outputs excluded.",
   "gui.nebulaeae2.stock.unavailable": "Initial stock snapshot unavailable for this job.",
+  "item.nebulaeae2.pattern_p2p_tunnel": "Pattern Provider P2P Tunnel",
   "tooltip.nebulaeae2.cable.channel_devices": "Total Connected Devices: %s",
   "tooltip.nebulaeae2.cable.channel_overhead": "Channel Overload Tax: %s CWU/t (Included in Global CWU)",
   "tooltip.nebulaeae2.cable.device_scale": "Device Scale Cost: %s CWU/t",
@@ -99,5 +100,7 @@
   "tooltip.nebulaeae2.controller.eu_demand": "EU Demand: %s EU/t",
   "tooltip.nebulaeae2.controller.infrastructure": "Infrastructure: %s CWU/t",
   "tooltip.nebulaeae2.controller.passive_shortfall": "Compute Shortfall: %s CWU/t",
-  "tooltip.nebulaeae2.pattern_author": "Encoded by: %s"
+  "tooltip.nebulaeae2.pattern_author": "Encoded by: %s",
+  "tooltip.nebulaeae2.pattern_p2p.join_input": "Extra inputs may be assigned by holding a attuned memory card in your offhand",
+  "tooltip.nebulaeae2.pattern_p2p.processing": "Round Robin your pattern providers!"
 }

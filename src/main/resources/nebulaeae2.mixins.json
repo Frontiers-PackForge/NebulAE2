@@ -4,6 +4,8 @@
   "package": "com.ghostipedia.nebulaeae2.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ae2.patternprovider.p2p.PatternProviderLogicP2PMixin",
+    "ae2.patternprovider.p2p.RemotePatternTargetBlockingMixin",
     "ae2.blockentity.networking.ControllerBlockEntityVisualStateMixin",
     "ae2.blockentity.networking.CreativeEnergyCellComputeMixin",
     "ae2.config.AEConfigChannelCommentMixin",

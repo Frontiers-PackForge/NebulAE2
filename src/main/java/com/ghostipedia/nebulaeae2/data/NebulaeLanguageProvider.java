@@ -12,6 +12,9 @@ public final class NebulaeLanguageProvider extends RegistrateLangProvider {
 
     @Override
     protected void addTranslations() {
+        add("item.nebulaeae2.pattern_p2p_tunnel", "Pattern Provider P2P Tunnel");
+        add("tooltip.nebulaeae2.pattern_p2p.processing", "Round Robin your pattern providers!");
+        add("tooltip.nebulaeae2.pattern_p2p.join_input", "Extra inputs may be assigned by holding a attuned memory card in your offhand");
         add("config.jade.plugin_nebulaeae2.controller_compute", "Nebulae Controller Compute");
         add("gui.nebulaeae2.controller_compute.title", "Network Computation Overview");
         add("gui.nebulaeae2.controller_compute.shortfall", "Shortfall: %s CWU/t");

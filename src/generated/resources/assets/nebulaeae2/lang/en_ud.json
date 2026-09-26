@@ -71,6 +71,7 @@
   "gui.nebulaeae2.stock.refresh": "˙uɐןd sıɥʇ ɹoɟ puoɔǝs ʎɹǝʌǝ pǝɥsǝɹɟǝɹ sı ʎʇıןıqɐןıɐʌⱯ",
   "gui.nebulaeae2.stock.roles": "˙pǝpnןɔxǝ sʇndʇno buıʇɟɐɹƆ ˙%s :ʞɔoʇs buıssıɯ ؛%s :ןɐʍɐɹpɥʇıʍ pǝuuɐןԀ",
   "gui.nebulaeae2.stock.unavailable": "˙qoظ sıɥʇ ɹoɟ ǝןqɐןıɐʌɐun ʇoɥsdɐus ʞɔoʇs ןɐıʇıuI",
+  "item.nebulaeae2.pattern_p2p_tunnel": "ןǝuun⟘ ԀᄅԀ ɹǝpıʌoɹԀ uɹǝʇʇɐԀ",
   "tooltip.nebulaeae2.cable.channel_devices": "%s :sǝɔıʌǝᗡ pǝʇɔǝuuoƆ ןɐʇo⟘",
   "tooltip.nebulaeae2.cable.channel_overhead": ")∩MƆ ןɐqoן⅁ uı pǝpnןɔuI( ʇ/∩MƆ %s :xɐ⟘ pɐoןɹǝʌO ןǝuuɐɥƆ",
   "tooltip.nebulaeae2.cable.device_scale": "ʇ/∩MƆ %s :ʇsoƆ ǝןɐɔS ǝɔıʌǝᗡ",
@@ -99,5 +100,7 @@
   "tooltip.nebulaeae2.controller.eu_demand": "ʇ/∩Ǝ %s :puɐɯǝᗡ ∩Ǝ",
   "tooltip.nebulaeae2.controller.infrastructure": "ʇ/∩MƆ %s :ǝɹnʇɔnɹʇsɐɹɟuI",
   "tooltip.nebulaeae2.controller.passive_shortfall": "ʇ/∩MƆ %s :ןןɐɟʇɹoɥS ǝʇndɯoƆ",
-  "tooltip.nebulaeae2.pattern_author": "%s :ʎq pǝpoɔuƎ"
+  "tooltip.nebulaeae2.pattern_author": "%s :ʎq pǝpoɔuƎ",
+  "tooltip.nebulaeae2.pattern_p2p.join_input": "puɐɥɟɟo ɹnoʎ uı pɹɐɔ ʎɹoɯǝɯ pǝunʇʇɐ ɐ buıpןoɥ ʎq pǝubıssɐ ǝq ʎɐɯ sʇnduı ɐɹʇxƎ",
+  "tooltip.nebulaeae2.pattern_p2p.processing": "¡sɹǝpıʌoɹd uɹǝʇʇɐd ɹnoʎ uıqoᴚ punoᴚ"
 }

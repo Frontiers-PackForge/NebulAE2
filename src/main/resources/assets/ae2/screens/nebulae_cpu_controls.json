@@ -1,5 +1,11 @@
 {
   "widgets": {
+    "nebulaeHistory": {
+      "left": 29,
+      "bottom": 25,
+      "width": 67,
+      "height": 20
+    },
     "nebulaeCompute": {
       "left": 8,
       "bottom": 25,

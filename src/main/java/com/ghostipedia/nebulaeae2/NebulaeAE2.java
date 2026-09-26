@@ -1,6 +1,7 @@
 package com.ghostipedia.nebulaeae2;
 
 import com.ghostipedia.nebulaeae2.compute.GridComputeService;
+import com.ghostipedia.nebulaeae2.activity.ActivityRegistration;
 import com.ghostipedia.nebulaeae2.p2p.PatternP2PRegistration;
 import com.ghostipedia.nebulaeae2.sticky.StickyCard;
 import com.ghostipedia.nebulaeae2.optimizer.PatternOptimization;
@@ -28,6 +29,7 @@ public final class NebulaeAE2 {
 
     public NebulaeAE2(IEventBus modBus, ModContainer modContainer) {
         AE2ChannelConfigPolicy.enforce();
+        ActivityRegistration.init(modBus);
         PatternP2PRegistration.init(modBus);
         StickyCard.init(modBus);
         PatternOptimization.init(modBus);

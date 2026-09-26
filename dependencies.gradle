@@ -1,3 +1,29 @@
+configurations {
+    sodiumShell {
+        canBeConsumed = false
+        canBeResolved = true
+        transitive = false
+    }
+}
+
+tasks.register('stripSodiumShell', Jar) {
+    archiveBaseName = 'nebulae-sodium-neoforge-shell-lib'
+    archiveVersion = forge.versions.sodium.get().replace('+', '-')
+    destinationDirectory = layout.buildDirectory.dir('sodium-shell-lib')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from { configurations.sodiumShell.collect { zipTree(it) } }
+    exclude 'META-INF/MANIFEST.MF'
+    exclude 'META-INF/neoforge.mods.toml'
+    exclude 'META-INF/jarjar/**'
+    exclude 'META-INF/services/net.neoforged.neoforgespi.locating.IModFileCandidateLocator'
+    manifest {
+        attributes(
+                'FMLModType': 'LIBRARY',
+                'Automatic-Module-Name': 'sodium_service'
+        )
+    }
+}
+
 dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter:5.10.3')
     compileOnly(libs.jetbrains.annotations)

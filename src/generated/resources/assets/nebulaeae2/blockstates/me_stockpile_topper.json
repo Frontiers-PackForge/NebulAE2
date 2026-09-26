@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "nebulaeae2:block/machine/me_stockpile_topper",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "nebulaeae2:block/machine/me_stockpile_topper",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "nebulaeae2:block/machine/me_stockpile_topper"
+    },
+    "facing=south": {
+      "model": "nebulaeae2:block/machine/me_stockpile_topper",
+      "y": 180
+    },
+    "facing=up": {
+      "gtceu:z": 180,
+      "model": "nebulaeae2:block/machine/me_stockpile_topper",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "nebulaeae2:block/machine/me_stockpile_topper",
+      "y": 270
+    }
+  }
+}
